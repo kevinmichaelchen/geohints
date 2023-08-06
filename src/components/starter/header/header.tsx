@@ -7,17 +7,14 @@ export default component$(() => {
     <header class={styles.header}>
       <div class={["container", styles.wrapper]}>
         <div class={styles.logo}>
-          <a href="/" title="qwik">
+          <a href="/" title="geohints">
             <QwikLogo height={50} width={143} />
           </a>
         </div>
         <ul>
           <li>
-            <a
-              href="https://qwik.builder.io/docs/components/overview/"
-              target="_blank"
-            >
-              Docs
+            <a href="/follow" target="_blank">
+              Follow
             </a>
           </li>
           <li>
