@@ -11,7 +11,7 @@ export default component$(() => {
         <br />
         to have <span class="highlight">you</span> here
       </h1>
-      <p>Have fun building your App with Qwik.</p>
+      <p>Have fun learning about GeoGuessr.</p>
       <div class={styles["button-group"]}>
         <button
           onClick$={async () => {
