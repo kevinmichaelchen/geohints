@@ -13,7 +13,7 @@ export default component$(() => {
         </div>
         <ul>
           <li>
-            <a href="/follow" target="_blank">
+            <a href="/follow">
               Follow
             </a>
           </li>
