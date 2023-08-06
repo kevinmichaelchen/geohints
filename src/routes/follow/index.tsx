@@ -27,8 +27,9 @@ export default component$(() => {
             {new Array(country.numImages).fill(0).map((_, i) => (
               <div key={i}>
                 <Image
-                  src={`/images/follow/${country.name.toLowerCase()}${i + 1
-                    }.webp`}
+                  src={`/images/follow/${country.name.toLowerCase()}${
+                    i + 1
+                  }.webp`}
                   layout="constrained"
                   width={400}
                   height={250}

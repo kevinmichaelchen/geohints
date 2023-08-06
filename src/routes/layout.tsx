@@ -29,7 +29,7 @@ export default component$(() => {
   return (
     <>
       <Header />
-      <main>
+      <main class="mx-5 md:mx-10">
         <Slot />
       </main>
       <Footer />

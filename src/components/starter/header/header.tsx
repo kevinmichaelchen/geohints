@@ -1,6 +1,20 @@
 import { component$ } from "@builder.io/qwik";
 import { QwikLogo } from "../icons/qwik";
 import styles from "./header.module.css";
+import { LuCar, LuBook } from "@qwikest/icons/lucide";
+
+const navLinks = [
+  {
+    label: "Follow Cars",
+    href: "/follow",
+    icon: <LuCar />,
+  },
+  {
+    label: "Languages",
+    href: "/languages",
+    icon: <LuBook />,
+  },
+];
 
 export default component$(() => {
   return (
@@ -12,27 +26,13 @@ export default component$(() => {
           </a>
         </div>
         <ul>
-          <li>
-            <a href="/follow">
-              Follow
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://qwik.builder.io/examples/introduction/hello-world/"
-              target="_blank"
-            >
-              Examples
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://qwik.builder.io/tutorial/welcome/overview/"
-              target="_blank"
-            >
-              Tutorials
-            </a>
-          </li>
+          {navLinks.map((e, i) => (
+            <li key={i}>
+              <a href={e.href}>
+                {e.label} {e.icon}
+              </a>
+            </li>
+          ))}
         </ul>
       </div>
     </header>
