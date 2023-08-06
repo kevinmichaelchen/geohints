@@ -38,11 +38,11 @@ const chars = {
   Þþ: ["is"],
 };
 
-function getFlagEmoji(countryCode) {
+function getFlagEmoji(countryCode: string) {
   const codePoints = countryCode
     .toUpperCase()
     .split("")
-    .map((char) => 127397 + char.charCodeAt());
+    .map((char) => 127397 + char.charCodeAt(0));
   return String.fromCodePoint(...codePoints);
 }
 
@@ -53,7 +53,7 @@ export default component$(() => {
         <div key={i}>
           <div class="text-3xl">{e[0]}</div>
           <ul>
-            {e[1].map((code, i) => (
+            {e[1].map((code: string, i) => (
               <li key={i}>
                 <div class="flex flex-row space-between items-center space-x-3">
                   <span>
