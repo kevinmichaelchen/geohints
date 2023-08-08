@@ -48,10 +48,10 @@ function getFlagEmoji(countryCode: string) {
 
 export default component$(() => {
   return (
-    <div class="space-y-10">
+    <div class="grid grid-cols-1 gap-y-5 md:gap-y-10 lg:gap-y-20 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
       {Object.entries(chars).map((e, i) => (
         <div key={i}>
-          <div class="text-3xl">{e[0]}</div>
+          <div class="text-3xl lg:text-5xl lg:mb-5">{e[0]}</div>
           <ul>
             {e[1].map((code: string, i) => (
               <li key={i}>
