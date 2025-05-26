@@ -112,7 +112,7 @@ export default component$(() => {
                 <div class="flex flex-row space-between items-center space-x-3">
                   <span>
                     {new Intl.DisplayNames(["en"], { type: "region" }).of(
-                      code.toUpperCase()
+                      code.toUpperCase(),
                     )}
                   </span>
                   <span class="text-3xl">{getFlagEmoji(code)}</span>

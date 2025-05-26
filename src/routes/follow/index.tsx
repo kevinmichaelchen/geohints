@@ -1,5 +1,5 @@
 import { component$ } from "@builder.io/qwik";
-import { Image } from "@unpic/qwik";
+import { OptimizedImage } from "~/components/ui/Image";
 
 type Country = {
   name: string;
@@ -26,14 +26,13 @@ export default component$(() => {
           <div class="grid gap-2 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-3 md:gap-5 lg:gap-10">
             {new Array(country.numImages).fill(0).map((_, i) => (
               <div key={i}>
-                <Image
-                  src={`/images/follow/${country.name.toLowerCase()}${
-                    i + 1
-                  }.webp`}
-                  layout="constrained"
+                <OptimizedImage
+                  src={`/images/follow/${country.name.toLowerCase()}${i + 1}.webp`}
                   width={400}
                   height={250}
                   alt={`Follow car for ${country.name}`}
+                  class="w-full h-auto rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+                  formats={["webp", "avif"]}
                 />
               </div>
             ))}
