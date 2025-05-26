@@ -2,6 +2,8 @@ import { component$, Slot, useStyles$ } from "@builder.io/qwik";
 import { routeLoader$ } from "@builder.io/qwik-city";
 import type { RequestHandler } from "@builder.io/qwik-city";
 
+import { CommandPaletteProvider } from "~/components/command-palette/CommandPaletteProvider";
+import { CommandPaletteButton } from "~/components/command-palette/CommandPaletteButton";
 import Header from "~/components/starter/header/header";
 import Footer from "~/components/starter/footer/footer";
 
@@ -28,7 +30,10 @@ export default component$(() => {
   useStyles$(styles);
   return (
     <>
-      <Header />
+      <CommandPaletteProvider />
+      <Header>
+        <CommandPaletteButton />
+      </Header>
       <main class="mx-5 md:mx-10">
         <Slot />
       </main>

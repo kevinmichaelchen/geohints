@@ -1,0 +1,4 @@
+This repo uses Qwik and pnpm.
+Use context7 when necessary for loading context and docs for certain repos, such as:
+
+https://github.com/qwikdev/qwik
