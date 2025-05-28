@@ -12,23 +12,55 @@ import {
   LuCommand,
   LuArrowRight,
   LuGlobe,
+  LuType,
+  LuAlertCircle,
+  LuFlag,
+  LuMapPin,
 } from "@qwikest/icons/lucide";
 
+// Import language character data
+import {
+  europeanCharGroups,
+  LanguageCharacter,
+  CharacterGroup,
+  searchCharacters,
+  getCountryName,
+} from "../../data/languageCharacters";
+
+// Import country data
+import {
+  countries,
+  Country,
+  getFlagEmoji,
+  searchCountries,
+} from "../../data/countries";
+
 // Define the available icon names as a type
-type IconName = "car" | "globe";
+type IconName = "car" | "globe" | "type" | "alert" | "flag" | "pin";
 
 // Map icon names to their corresponding components
 const iconComponents = {
   car: LuCommand,
   globe: LuGlobe,
+  type: LuType,
+  alert: LuAlertCircle,
+  flag: LuFlag,
+  pin: LuMapPin,
 } as const;
+
+type CommandType = "navigation" | "character" | "group" | "country";
 
 interface CommandItem {
   id: string;
   title: string;
   href: string;
+  type: CommandType;
   icon?: IconName;
   description?: string;
+  char?: string; // For character commands
+  countries?: string[]; // For character commands
+  parent?: string; // For nested commands
+  children?: string[]; // For parent commands
 }
 
 interface CommandPaletteProps {
@@ -42,27 +74,149 @@ export const CommandPalette = component$<CommandPaletteProps>(
     const searchQuery = useSignal("");
     const selectedIndex = useSignal(0);
 
-    // Sample commands - using string-based icon names
-    const commands = useSignal<CommandItem[]>([
-      { id: "follow", title: "Follow Cars", href: "/follow", icon: "car" },
+    // Base commands - main navigation items
+    const baseCommands = useSignal<CommandItem[]>([
+      {
+        id: "follow",
+        title: "Follow Cars",
+        href: "/follow",
+        icon: "car",
+        type: "navigation",
+      },
+      {
+        id: "countries",
+        title: "Country Codes",
+        href: "/countries",
+        icon: "flag",
+        type: "navigation",
+        description: "Search countries by ISO 3166-1 alpha-2 codes",
+      },
       {
         id: "languages",
         title: "Languages",
         href: "/languages",
         icon: "globe",
+        type: "navigation",
+        description: "Browse language characters by region",
+        children: ["languages-europe"],
+      },
+      {
+        id: "languages-europe",
+        title: "European Languages",
+        href: "/languages/europe",
+        icon: "globe",
+        type: "group",
+        parent: "languages",
+        description: "Browse European language characters",
+        children: europeanCharGroups.map(
+          (group) => `languages-europe-${group.id}`,
+        ),
       },
     ]);
 
+    // Add character group commands
+    europeanCharGroups.forEach((group) => {
+      baseCommands.value.push({
+        id: `languages-europe-${group.id}`,
+        title: group.name,
+        href: `/languages/europe#section-${group.id.split("-").pop()?.charAt(0).toUpperCase()}`,
+        icon: "type",
+        type: "group",
+        parent: "languages-europe",
+        description: `${group.characters.length} special characters`,
+        children: group.characters.map((char) => `char-${char.id}`),
+      });
+    });
+
+    // Add individual character commands
+    europeanCharGroups.forEach((group) => {
+      group.characters.forEach((char) => {
+        baseCommands.value.push({
+          id: `char-${char.id}`,
+          title: char.char,
+          href: `/languages/europe#section-${group.id.split("-").pop()?.charAt(0).toUpperCase()}`,
+          icon: "alert",
+          type: "character",
+          parent: `languages-europe-${group.id}`,
+          description: char.description,
+          char: char.char,
+          countries: char.countries,
+        });
+      });
+    });
+
+    // All commands
+    const commands = useSignal<CommandItem[]>(baseCommands.value);
+
     const filteredCommands = useComputed$(() => {
-      if (!searchQuery.value) return commands.value;
-      return commands.value.filter(
-        (cmd) =>
-          cmd.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          (cmd.description &&
-            cmd.description
-              .toLowerCase()
-              .includes(searchQuery.value.toLowerCase())),
-      );
+      if (!searchQuery.value) {
+        // When there's no search, only show top-level navigation items
+        return commands.value.filter((cmd) => cmd.type === "navigation");
+      }
+
+      const query = searchQuery.value.toLowerCase();
+      const results: CommandItem[] = [];
+
+      // Add direct matches from commands
+      commands.value.forEach((cmd) => {
+        let shouldAdd = false;
+
+        // Check title and description
+        if (
+          cmd.title.toLowerCase().includes(query) ||
+          (cmd.description && cmd.description.toLowerCase().includes(query))
+        ) {
+          shouldAdd = true;
+        }
+
+        // For character commands, check additional properties
+        if (cmd.type === "character") {
+          // Check character itself
+          if (cmd.char && cmd.char.toLowerCase().includes(query)) {
+            shouldAdd = true;
+          }
+
+          // Check country names and codes
+          if (cmd.countries) {
+            for (const code of cmd.countries) {
+              const countryName = getCountryName(code).toLowerCase();
+              if (
+                countryName.includes(query) ||
+                code.toLowerCase().includes(query)
+              ) {
+                shouldAdd = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (shouldAdd) {
+          results.push(cmd);
+        }
+      });
+
+      // Add country search results if query is at least 2 characters
+      if (query.length >= 2) {
+        // Search for countries matching the query
+        const matchingCountries = searchCountries(query);
+
+        // Only add up to 5 country results to avoid overwhelming the results
+        matchingCountries.slice(0, 5).forEach((country) => {
+          // Create a command item for each matching country
+          results.push({
+            id: `country-${country.code}`,
+            title: country.name,
+            href: `/countries?search=${encodeURIComponent(country.code)}`,
+            type: "country",
+            icon: "flag",
+            description: `${country.code.toUpperCase()} - ${country.region}${country.subregion ? `, ${country.subregion}` : ""}`,
+            char: getFlagEmoji(country.code),
+          });
+        });
+      }
+
+      return results;
     });
 
     // Focus search input when modal opens
@@ -182,11 +336,41 @@ export const CommandPalette = component$<CommandPaletteProps>(
                         </span>
                       )}
                       <div>
-                        <p class="font-medium text-gray-900">{command.title}</p>
+                        <p class="font-medium text-gray-900">
+                          {command.type === "character" ? (
+                            <span class="text-xl mr-2">{command.title}</span>
+                          ) : command.type === "country" ? (
+                            <span class="flex items-center">
+                              <span class="text-xl mr-2">{command.char}</span>
+                              <span>{command.title}</span>
+                            </span>
+                          ) : (
+                            command.title
+                          )}
+                        </p>
                         {command.description && (
                           <p class="text-xs text-gray-500">
                             {command.description}
                           </p>
+                        )}
+                        {command.type === "character" && command.countries && (
+                          <div class="flex flex-wrap mt-1 gap-1">
+                            {command.countries.slice(0, 3).map((code) => (
+                              <span
+                                key={code}
+                                class="inline-flex items-center text-xs bg-gray-100 px-1.5 py-0.5 rounded"
+                                title={getCountryName(code)}
+                              >
+                                <span class="mr-1">{getFlagEmoji(code)}</span>
+                                <span>{code.toUpperCase()}</span>
+                              </span>
+                            ))}
+                            {command.countries.length > 3 && (
+                              <span class="inline-flex items-center text-xs bg-gray-100 px-1.5 py-0.5 rounded">
+                                +{command.countries.length - 3} more
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
