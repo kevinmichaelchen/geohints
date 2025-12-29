@@ -17,6 +17,7 @@ export interface AnalysisOutput {
   characters: string[];
 }
 
+// eslint-disable-next-line no-control-regex
 const ASCII_BASIC = /^[\x00-\x7F]$/;
 const mappedCharSet = new Set(getAllMappedCharacters());
 
@@ -58,6 +59,7 @@ function calculateConfidence(matchedChars: string[]): number {
 
 export function analyzeText(
   text: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _mode: "simple" | "advanced" = "simple",
 ): AnalysisOutput {
   const uniqueChars = extractUniqueCharacters(text);

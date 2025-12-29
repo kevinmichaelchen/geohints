@@ -4,15 +4,20 @@ import {
   AnalysisResults,
   FoundCharacters,
 } from "~/components/features/AnalysisResults";
+import {
+  type AnalysisMode,
+  ModeToggle,
+} from "~/components/features/ModeToggle";
 import { TextInput } from "~/components/features/TextInput";
 import { PageHeader } from "~/components/ui/PageHeader";
 import { analyzeText } from "~/lib/analyzer";
 
 export default component$(() => {
   const inputText = useSignal("");
+  const mode = useSignal<AnalysisMode>("simple");
 
   const analysis = useComputed$(() => {
-    return analyzeText(inputText.value, "simple");
+    return analyzeText(inputText.value, mode.value);
   });
 
   return (
@@ -24,6 +29,7 @@ export default component$(() => {
       />
 
       <section class="container mx-auto px-4 pb-16 max-w-3xl">
+        <ModeToggle mode={mode} />
         <TextInput value={inputText} />
 
         <div class="mt-6">
