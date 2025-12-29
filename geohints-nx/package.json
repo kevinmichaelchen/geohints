@@ -1,0 +1,41 @@
+{
+  "name": "@geohints-nx/source",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite --mode ssr --config apps/web/vite.config.ts",
+    "build": "nx build",
+    "build:web": "cd apps/web && qwik build",
+    "preview": "cd apps/web && qwik build preview && vite preview --open",
+    "scrape": "tsx libs/scraper/src/cli.ts scrape",
+    "scrape:all": "tsx libs/scraper/src/cli.ts scrape --all",
+    "scrape:stats": "tsx libs/scraper/src/cli.ts stats",
+    "lint": "nx lint",
+    "test": "nx test"
+  },
+  "private": true,
+  "devDependencies": {
+    "@builder.io/qwik": "^1.18.0",
+    "@builder.io/qwik-city": "^1.18.0",
+    "@nx/js": "22.3.3",
+    "@nx/workspace": "22.3.3",
+    "nx": "22.3.3",
+    "qwik-nx": "^3.2.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0"
+  },
+  "dependencies": {
+    "@effect/cli": "^0.73.0",
+    "@effect/platform": "^0.94.0",
+    "@effect/platform-node": "^0.104.0",
+    "@qwikest/icons": "^0.0.13",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@unpic/qwik": "^1.0.0",
+    "autoprefixer": "^10.4.23",
+    "cheerio": "^1.1.2",
+    "effect": "^3.19.13",
+    "tailwindcss": "^4.1.18",
+    "vite-tsconfig-paths": "^6.0.3"
+  }
+}

@@ -1,0 +1,320 @@
+/**
+ * Geomastr.com scraper using Effect Stream processing.
+ *
+ * Scrapes geographic hint images from geomastr.com with proper
+ * rate limiting, error handling, and deduplication.
+ *
+ * @module geomastr
+ */
+
+import { Effect, Stream, Schema, Chunk } from "effect"
+import * as cheerio from "cheerio"
+import { HttpService } from "../services/http-service"
+import { StorageService } from "../services/storage-service"
+import { ParseError, type HttpServiceError, type StorageServiceError } from "../services/errors"
+import { ScraperConfig } from "../config/scraper-config"
+import {
+  Category,
+  CountryCode,
+  ManifestEntry,
+  Manifest,
+  Url,
+} from "../../../shared/src/schemas"
+
+// ---------------------------------------------------------------------------
+// Site-specific Schemas
+// ---------------------------------------------------------------------------
+
+/**
+ * Parsed country data from geomastr page.
+ */
+const GeomastrCountry = Schema.Struct({
+  name: Schema.String,
+  code: Schema.String,
+  images: Schema.Array(Schema.String),
+})
+type GeomastrCountry = typeof GeomastrCountry.Type
+
+// ---------------------------------------------------------------------------
+// HTML Parsing
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse country data from geomastr HTML.
+ */
+const parseCountryData = (
+  html: string,
+  category: Category
+): Effect.Effect<readonly GeomastrCountry[], ParseError> =>
+  Effect.gen(function* () {
+    const $ = cheerio.load(html)
+    const countries: GeomastrCountry[] = []
+
+    // Geomastr organizes by country sections
+    $(".country-section, [data-country]").each((_, element) => {
+      const $el = $(element)
+      const name = $el.find(".country-name, h2, h3").first().text().trim()
+      const code = $el.attr("data-country") ?? name.slice(0, 2).toUpperCase()
+
+      const images: string[] = []
+      $el.find("img").each((_, img) => {
+        const src = $(img).attr("src") ?? $(img).attr("data-src")
+        if (src && src.includes(category)) {
+          images.push(src.startsWith("http") ? src : `https://geomastr.com${src}`)
+        }
+      })
+
+      if (images.length > 0) {
+        countries.push({ name, code, images })
+      }
+    })
+
+    // Fallback: try to find all images with category in URL
+    if (countries.length === 0) {
+      const allImages: string[] = []
+      $("img").each((_, img) => {
+        const src = $(img).attr("src") ?? $(img).attr("data-src")
+        if (src) {
+          const fullUrl = src.startsWith("http") ? src : `https://geomastr.com${src}`
+          allImages.push(fullUrl)
+        }
+      })
+
+      if (allImages.length > 0) {
+        countries.push({
+          name: "Unknown",
+          code: "XX",
+          images: allImages,
+        })
+      }
+    }
+
+    if (countries.length === 0) {
+      return yield* Effect.fail(
+        new ParseError({
+          source: `geomastr/${category}`,
+          message: "No country data found in HTML",
+        })
+      )
+    }
+
+    return countries
+  })
+
+// ---------------------------------------------------------------------------
+// Image Processing
+// ---------------------------------------------------------------------------
+
+/**
+ * Download and process a single image.
+ */
+const processImage = (
+  category: Category,
+  country: GeomastrCountry,
+  imageUrl: string,
+  index: number
+): Effect.Effect<
+  ManifestEntry,
+  HttpServiceError | StorageServiceError | ParseError,
+  HttpService | StorageService | ScraperConfig
+> =>
+  Effect.gen(function* () {
+    const http = yield* HttpService
+    const storage = yield* StorageService
+
+    // Download image
+    const imageData = yield* http.fetchImage(imageUrl)
+
+    // Compute content hash for deduplication
+    const contentHash = yield* storage.hashContent(imageData)
+
+    // Generate unique ID
+    const id = `${category}-geomastr-${country.code.toLowerCase()}-${index}`
+
+    // Generate file paths
+    const basePath = `${category}/${country.code.toLowerCase()}`
+    const filename = `${contentHash.slice(0, 8)}`
+
+    // For now, save original image (TODO: add image processing for variants)
+    const originalPath = `${basePath}/${filename}.webp`
+    yield* storage.saveImage(originalPath, imageData)
+
+    // Create manifest entry
+    const countryCode = country.code.toUpperCase().slice(0, 2) as CountryCode
+    const sourceUrl = imageUrl as Url
+
+    return new ManifestEntry({
+      id,
+      category,
+      source: "geomastr",
+      country: country.name,
+      countryCode,
+      sourceUrl,
+      contentHash,
+      variants: {
+        "400w": `${basePath}/${filename}-400w.webp`,
+        "800w": `${basePath}/${filename}-800w.webp`,
+        "1200w": `${basePath}/${filename}-1200w.webp`,
+      },
+      scrapedAt: new Date(),
+    })
+  })
+
+// ---------------------------------------------------------------------------
+// Main Scraper
+// ---------------------------------------------------------------------------
+
+/**
+ * Scrape a category from geomastr.com.
+ *
+ * Uses Stream-based processing for efficient handling of multiple images.
+ */
+export const scrapeGeomastr = (
+  category: Category
+): Effect.Effect<
+  Chunk.Chunk<ManifestEntry>,
+  HttpServiceError | StorageServiceError | ParseError,
+  HttpService | StorageService | ScraperConfig
+> =>
+  Effect.gen(function* () {
+    const http = yield* HttpService
+    const storage = yield* StorageService
+    const config = yield* ScraperConfig
+
+    yield* Effect.log(`Scraping ${category} from geomastr.com...`)
+
+    // Fetch category page
+    const categoryUrl = `https://geomastr.com/${category}`
+    const html = yield* http.fetchHtml(categoryUrl)
+
+    // Parse country data
+    const countries = yield* parseCountryData(html, category)
+    yield* Effect.log(`Found ${countries.length} countries`)
+
+    // Read existing manifest for deduplication
+    const existingManifest = yield* storage.readManifest().pipe(
+      Effect.catchAll(() => Effect.succeed(new Manifest({
+        version: 1,
+        lastUpdated: new Date(),
+        entries: [],
+      })))
+    )
+    const existingHashes = new Set(existingManifest.entries.map((e: ManifestEntry) => e.contentHash))
+
+    // Stream process all images
+    const entries = yield* Stream.fromIterable(countries).pipe(
+      // Flatten to (country, imageUrl, index) tuples
+      Stream.flatMap((country) =>
+        Stream.fromIterable(country.images).pipe(
+          Stream.zipWithIndex,
+          Stream.map(([imageUrl, index]) => ({
+            country,
+            imageUrl,
+            index,
+          }))
+        )
+      ),
+      // Process each image with controlled concurrency
+      Stream.mapEffect(
+        ({ country, imageUrl, index }) =>
+          processImage(category, country, imageUrl, index).pipe(
+            Effect.tap((entry) =>
+              Effect.log(`Processed: ${entry.country} - ${entry.id}`)
+            ),
+            // Skip if already exists (deduplication)
+            Effect.filterOrFail(
+              (entry) => !existingHashes.has(entry.contentHash),
+              () =>
+                new ParseError({
+                  source: imageUrl,
+                  message: "Duplicate image (already in manifest)",
+                })
+            ),
+            // Catch individual errors and continue
+            Effect.catchAll((error) =>
+              Effect.gen(function* () {
+                yield* Effect.logWarning(
+                  `Skipping ${imageUrl}: ${error._tag}`
+                )
+                return null as ManifestEntry | null
+              })
+            )
+          ),
+        { concurrency: config.concurrency }
+      ),
+      // Filter out nulls (failed/skipped images)
+      Stream.filter((entry): entry is ManifestEntry => entry !== null),
+      Stream.runCollect
+    )
+
+    yield* Effect.log(`Scraped ${Chunk.size(entries)} new images`)
+
+    return entries
+  })
+
+/**
+ * Scrape all categories from geomastr.com.
+ */
+export const scrapeAllGeomastr = (): Effect.Effect<
+  Manifest,
+  HttpServiceError | StorageServiceError | ParseError,
+  HttpService | StorageService | ScraperConfig
+> =>
+  Effect.gen(function* () {
+    const storage = yield* StorageService
+
+    // Categories available on geomastr
+    const geomastrCategories: readonly Category[] = [
+      "bollards",
+      "license-plates",
+      "road-lines",
+      "street-signs",
+      "utility-poles",
+      "guardrails",
+      "road-markings",
+    ]
+
+    yield* Effect.log(
+      `Scraping ${geomastrCategories.length} categories from geomastr.com...`
+    )
+
+    // Process each category sequentially to avoid overwhelming the server
+    const allEntries = yield* Effect.forEach(
+      geomastrCategories,
+      (category) =>
+        scrapeGeomastr(category).pipe(
+          Effect.catchAll((error) =>
+            Effect.gen(function* () {
+              yield* Effect.logWarning(
+                `Failed to scrape ${category}: ${error._tag}`
+              )
+              return Chunk.empty<ManifestEntry>()
+            })
+          )
+        ),
+      { concurrency: 1 }
+    )
+
+    // Combine all entries
+    const entries = allEntries.flatMap((chunk) => Chunk.toArray(chunk))
+
+    // Read existing manifest and merge
+    const existingManifest = yield* storage.readManifest().pipe(
+      Effect.catchAll(() => Effect.succeed(new Manifest({
+        version: 1,
+        lastUpdated: new Date(),
+        entries: [],
+      })))
+    )
+
+    const newManifest = existingManifest.merge(entries)
+
+    // Save updated manifest
+    yield* storage.writeManifest(newManifest)
+
+    yield* Effect.log(
+      `Manifest updated: ${newManifest.entries.length} total entries`
+    )
+
+    return newManifest
+  })
