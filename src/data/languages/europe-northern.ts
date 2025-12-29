@@ -1,39 +1,47 @@
 import type { CharacterEntries } from "~/lib/types";
 
+// Source: https://geomastr.com/alphabets/europe/
+// Countries: dk (Denmark), ee (Estonia), fi (Finland), is (Iceland),
+//            lt (Lithuania), lv (Latvia), no (Norway), se (Sweden)
 export const europeNorthernChars: CharacterEntries = {
-  Áá: ["is"],
+  // Scandinavian (Danish, Norwegian, Swedish, Finnish)
   Åå: ["dk", "fi", "no", "se"],
+  Ææ: ["dk", "is", "no"],
+  Øø: ["dk", "no"],
   Ää: ["ee", "fi", "se"],
-  Āā: ["lv"],
-  Ąą: ["lt"],
-  Čč: ["lv", "lt"],
+  Öö: ["ee", "fi", "is", "se"],
+
+  // Icelandic unique
+  Áá: ["is"],
   Ðð: ["is"],
-  Ėė: ["lt"],
-  Éé: ["is", "no"],
-  Ēē: ["lv"],
-  Ęę: ["lt"],
-  Ģģ: ["lv"],
+  Éé: ["is"],
   Íí: ["is"],
+  Óó: ["is"],
+  Úú: ["is"],
+  Ýý: ["is"],
+  Þþ: ["is"],
+
+  // Estonian unique
+  Õõ: ["ee"],
+  Üü: ["ee"],
+  Šš: ["ee", "lv", "lt"],
+  Žž: ["ee", "lv", "lt"],
+
+  // Latvian unique (macrons and cedillas)
+  Āā: ["lv"],
+  Čč: ["lv", "lt"],
+  Ēē: ["lv"],
+  Ģģ: ["lv"],
   Īī: ["lv"],
-  Įį: ["lt"],
   Ķķ: ["lv"],
   Ļļ: ["lv"],
   Ņņ: ["lv"],
-  Øø: ["dk", "no"],
-  Óó: ["is"],
-  Öö: ["ee", "fi", "is", "se"],
-  Õõ: ["ee"],
-  Qq: ["dk", "ee", "fi", "no", "se"],
-  Šš: ["ee", "lv", "lt"],
-  Úú: ["is"],
-  Üü: ["ee"],
   Ūū: ["lv", "lt"],
+
+  // Lithuanian unique (ogoneks and overdots)
+  Ąą: ["lt"],
+  Ėė: ["lt"],
+  Ęę: ["lt"],
+  Įį: ["lt"],
   Ųų: ["lt"],
-  Xx: ["dk", "ee", "fi", "is", "no", "se"],
-  Yy: ["dk", "ee", "fi", "is", "lt", "no", "se"],
-  Ýý: ["is"],
-  Ww: ["dk", "ee", "fi", "no", "se"],
-  Žž: ["ee", "lv", "lt"],
-  Ææ: ["dk", "is", "no"],
-  Þþ: ["is"],
 };
