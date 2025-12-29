@@ -1,5 +1,6 @@
 import { component$ } from "@builder.io/qwik";
-import { QwikLogo } from "~/components/ui/QwikLogo";
+import { Link } from "@builder.io/qwik-city";
+import { GeoHintsLogo } from "~/components/ui/GeoHintsLogo";
 import styles from "./Header.module.css";
 import { LuCar, LuBook } from "@qwikest/icons/lucide";
 
@@ -21,16 +22,16 @@ export default component$(() => {
     <header class={styles.header}>
       <div class={["container", styles.wrapper]}>
         <div class={styles.logo}>
-          <a href="/" title="geohints">
-            <QwikLogo height={50} width={143} />
-          </a>
+          <Link href="/" title="GeoHints">
+            <GeoHintsLogo height={40} width={160} />
+          </Link>
         </div>
         <ul>
           {navLinks.map((e, i) => (
             <li key={i}>
-              <a href={e.href}>
+              <Link href={e.href}>
                 {e.label} {e.icon}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
