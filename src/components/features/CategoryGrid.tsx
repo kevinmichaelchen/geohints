@@ -25,11 +25,19 @@ const categories = [
 
 export const CategoryGrid = component$(() => {
   return (
-    <section class="@container container mx-auto px-4 py-12">
-      <h2 class="text-2xl font-semibold mb-8 text-center">Explore Hints</h2>
-      <div class="grid grid-cols-1 @sm:grid-cols-2 @lg:grid-cols-3 gap-6">
-        {categories.map((cat) => (
-          <CategoryCard key={cat.href} {...cat} />
+    <section class="@container container mx-auto px-4 py-12 md:py-16">
+      {/* Section heading with fade-in */}
+      <h2
+        class="text-2xl md:text-3xl font-semibold mb-10 text-center tracking-tight opacity-0"
+        style="animation: fade-in-up 0.5s ease-out 0.45s forwards"
+      >
+        Explore Hints
+      </h2>
+
+      {/* Cards grid */}
+      <div class="grid grid-cols-1 @sm:grid-cols-2 @lg:grid-cols-3 gap-6 md:gap-8">
+        {categories.map((cat, index) => (
+          <CategoryCard key={cat.href} {...cat} index={index} />
         ))}
       </div>
     </section>

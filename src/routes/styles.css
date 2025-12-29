@@ -1,6 +1,4 @@
 body {
-  background: var(--color-qwik-dark-background);
-  color: var(--color-qwik-dark-text);
   overflow-x: hidden;
 }
 
