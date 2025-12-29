@@ -1,5 +1,6 @@
 import { component$ } from "@builder.io/qwik";
 import { Link } from "@builder.io/qwik-city";
+import { useEntranceAnimation } from "~/lib/hooks";
 
 interface RegionCardProps {
   title: string;
@@ -11,13 +12,17 @@ interface RegionCardProps {
 
 export const RegionCard = component$<RegionCardProps>(
   ({ title, description, href, countries, index = 0 }) => {
-    const animationDelay = `${0.4 + index * 0.1}s`;
+    const entranceStyle = useEntranceAnimation(index, {
+      baseDelay: 0.1,
+      stagger: 0.05,
+      duration: 0.4,
+    });
 
     return (
       <Link
         href={href}
-        class="group relative block rounded-xl overflow-hidden bg-qwik-dirty-black transition-all duration-300 ease-out hover:scale-[1.02] hover:-translate-y-1 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-qwik-dark-blue/20 opacity-0"
-        style={{ animation: `fade-in-up 0.5s ease-out ${animationDelay} forwards` }}
+        class="group relative block rounded-xl overflow-hidden bg-qwik-dirty-black transition-all duration-300 ease-out hover:scale-[1.02] hover:-translate-y-1 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-qwik-dark-blue/20"
+        style={entranceStyle}
       >
         {/* Gradient border on hover */}
         <div

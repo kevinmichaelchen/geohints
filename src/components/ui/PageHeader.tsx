@@ -1,5 +1,6 @@
 import { component$, Slot } from "@builder.io/qwik";
 import { Link } from "@builder.io/qwik-city";
+import { useIsInitialLoad } from "~/lib/hooks";
 
 interface BreadcrumbItem {
   label: string;
@@ -14,15 +15,24 @@ interface PageHeaderProps {
 
 export const PageHeader = component$<PageHeaderProps>(
   ({ title, subtitle, breadcrumbs }) => {
+    const isInitialLoad = useIsInitialLoad();
+
+    // Animation styles - only on initial load
+    const breadcrumbStyle = isInitialLoad
+      ? { opacity: 0, animation: "fade-in-up 0.4s ease-out forwards" }
+      : {};
+    const titleStyle = isInitialLoad
+      ? { opacity: 0, animation: "fade-in-up 0.4s ease-out 0.05s forwards" }
+      : {};
+    const subtitleStyle = isInitialLoad
+      ? { opacity: 0, animation: "fade-in-up 0.4s ease-out 0.1s forwards" }
+      : {};
+
     return (
       <header class="container mx-auto px-4 py-12 md:py-16">
         {/* Breadcrumbs */}
         {breadcrumbs && breadcrumbs.length > 0 && (
-          <nav
-            class="mb-6 opacity-0"
-            style="animation: fade-in-up 0.5s ease-out 0.1s forwards"
-            aria-label="Breadcrumb"
-          >
+          <nav class="mb-6" style={breadcrumbStyle} aria-label="Breadcrumb">
             <ol class="flex items-center gap-2 text-sm text-gray-400">
               <li>
                 <Link
@@ -53,18 +63,15 @@ export const PageHeader = component$<PageHeaderProps>(
 
         {/* Title */}
         <h1
-          class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 opacity-0"
-          style="animation: fade-in-up 0.5s ease-out 0.2s forwards"
+          class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4"
+          style={titleStyle}
         >
           {title}
         </h1>
 
         {/* Subtitle */}
         {subtitle && (
-          <p
-            class="text-lg md:text-xl text-gray-300 max-w-2xl opacity-0"
-            style="animation: fade-in-up 0.5s ease-out 0.3s forwards"
-          >
+          <p class="text-lg md:text-xl text-gray-300 max-w-2xl" style={subtitleStyle}>
             {subtitle}
           </p>
         )}

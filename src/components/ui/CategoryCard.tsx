@@ -1,6 +1,7 @@
 import { component$ } from "@builder.io/qwik";
 import { Link } from "@builder.io/qwik-city";
 import { Image } from "@unpic/qwik";
+import { useEntranceAnimation } from "~/lib/hooks";
 
 interface CategoryCardProps {
   title: string;
@@ -19,8 +20,12 @@ export const CategoryCard = component$<CategoryCardProps>(
       ? "opacity-60 cursor-not-allowed"
       : "hover:scale-[1.02] hover:-translate-y-1";
 
-    // Staggered animation delay based on index
-    const animationDelay = `${0.5 + index * 0.1}s`;
+    // Entrance animation (only on initial load, instant on SPA nav)
+    const entranceStyle = useEntranceAnimation(index, {
+      baseDelay: 0.1,
+      stagger: 0.05,
+      duration: 0.4,
+    });
 
     const content = (
       <>
@@ -75,10 +80,7 @@ export const CategoryCard = component$<CategoryCardProps>(
       </>
     );
 
-    const wrapperStyle = {
-      opacity: 0,
-      animation: `fade-in-up 0.5s ease-out ${animationDelay} forwards`,
-    };
+    const wrapperStyle = entranceStyle;
 
     // Shadow classes for hover
     const shadowClasses = comingSoon

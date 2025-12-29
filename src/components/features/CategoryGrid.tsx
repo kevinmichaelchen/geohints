@@ -1,5 +1,6 @@
 import { component$ } from "@builder.io/qwik";
 import { CategoryCard } from "~/components/ui/CategoryCard";
+import { useIsInitialLoad } from "~/lib/hooks";
 
 const categories = [
   {
@@ -24,12 +25,18 @@ const categories = [
 ];
 
 export const CategoryGrid = component$(() => {
+  const isInitialLoad = useIsInitialLoad();
+
+  const headingStyle = isInitialLoad
+    ? { opacity: 0, animation: "fade-in-up 0.4s ease-out forwards" }
+    : {};
+
   return (
     <section class="@container container mx-auto px-4 py-12 md:py-16">
       {/* Section heading with fade-in */}
       <h2
-        class="text-2xl md:text-3xl font-semibold mb-10 text-center tracking-tight opacity-0"
-        style="animation: fade-in-up 0.5s ease-out 0.45s forwards"
+        class="text-2xl md:text-3xl font-semibold mb-10 text-center tracking-tight"
+        style={headingStyle}
       >
         Explore Hints
       </h2>

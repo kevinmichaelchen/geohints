@@ -2,6 +2,7 @@ import { component$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { Image } from "@unpic/qwik";
 import { PageHeader } from "~/components/ui/PageHeader";
+import { useIsInitialLoad } from "~/lib/hooks";
 
 interface Country {
   name: string;
@@ -35,6 +36,8 @@ const getFlagEmoji = (code: string) => {
 };
 
 export default component$(() => {
+  const isInitialLoad = useIsInitialLoad();
+
   return (
     <div class="min-h-screen">
       <PageHeader
@@ -44,33 +47,41 @@ export default component$(() => {
       />
 
       <div class="container mx-auto px-4 pb-16 space-y-16">
-        {countries.map((country, countryIndex) => (
-          <section
-            key={country.code}
-            class="opacity-0"
-            style={{
-              animation: `fade-in-up 0.5s ease-out ${0.4 + countryIndex * 0.15}s forwards`,
-            }}
-          >
-            {/* Country header */}
-            <div class="flex items-center gap-4 mb-6">
-              <span class="text-4xl">{getFlagEmoji(country.code)}</span>
-              <div>
-                <h2 class="text-2xl md:text-3xl font-bold">{country.name}</h2>
-                <p class="text-gray-400 text-sm mt-1">{country.description}</p>
-              </div>
-            </div>
+        {countries.map((country, countryIndex) => {
+          const sectionStyle = isInitialLoad
+            ? {
+                opacity: 0,
+                animation: `fade-in-up 0.4s ease-out ${countryIndex * 0.1}s forwards`,
+              }
+            : {};
 
-            {/* Image grid */}
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-              {new Array(country.numImages).fill(0).map((_, i) => {
-                const imageDelay = `${0.5 + countryIndex * 0.15 + i * 0.03}s`;
-                return (
-                  <div
-                    key={i}
-                    class="group relative rounded-lg overflow-hidden bg-qwik-dirty-black/60 opacity-0"
-                    style={{ animation: `fade-in-up 0.4s ease-out ${imageDelay} forwards` }}
-                  >
+          return (
+            <section key={country.code} style={sectionStyle}>
+              {/* Country header */}
+              <div class="flex items-center gap-4 mb-6">
+                <span class="text-4xl">{getFlagEmoji(country.code)}</span>
+                <div>
+                  <h2 class="text-2xl md:text-3xl font-bold">{country.name}</h2>
+                  <p class="text-gray-400 text-sm mt-1">{country.description}</p>
+                </div>
+              </div>
+
+              {/* Image grid */}
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                {new Array(country.numImages).fill(0).map((_, i) => {
+                  const imageStyle = isInitialLoad
+                    ? {
+                        opacity: 0,
+                        animation: `fade-in-up 0.3s ease-out ${countryIndex * 0.1 + (i % 10) * 0.02}s forwards`,
+                      }
+                    : {};
+
+                  return (
+                    <div
+                      key={i}
+                      class="group relative rounded-lg overflow-hidden bg-qwik-dirty-black/60"
+                      style={imageStyle}
+                    >
                     {/* Gradient border on hover */}
                     <div
                       class="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
@@ -98,7 +109,8 @@ export default component$(() => {
               })}
             </div>
           </section>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

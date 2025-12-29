@@ -1,5 +1,6 @@
 import { component$ } from "@builder.io/qwik";
 import { getFlagEmoji, getCountryName } from "~/lib/utils";
+import { useIsInitialLoad } from "~/lib/hooks";
 import type { CharacterEntry } from "~/lib/types";
 
 interface HighlightTextProps {
@@ -42,18 +43,24 @@ interface CharacterGridProps {
 
 export const CharacterGrid = component$<CharacterGridProps>(
   ({ characters, highlightQuery = "" }) => {
+    const isInitialLoad = useIsInitialLoad();
+
     return (
       <div class="@container grid grid-cols-3 gap-2.5 @sm:grid-cols-4 @md:grid-cols-5 @lg:grid-cols-6 @xl:grid-cols-7 @2xl:grid-cols-8 @sm:gap-3">
         {characters.map((entry, i) => {
-          const animationDelay = `${0.2 + (i % 16) * 0.025}s`;
+          // Only animate on initial load, instant on SPA navigation
+          const entranceStyle = isInitialLoad
+            ? {
+                opacity: 0,
+                animation: `fade-in-up 0.25s ease-out ${(i % 16) * 0.02}s forwards`,
+              }
+            : {};
 
           return (
             <div
               key={i}
-              class="group relative rounded-md bg-qwik-dirty-black/60 p-3 transition-all duration-200 hover:bg-qwik-dirty-black hover:shadow-lg hover:shadow-black/20 opacity-0"
-              style={{
-                animation: `fade-in-up 0.3s ease-out ${animationDelay} forwards`,
-              }}
+              class="group relative rounded-md bg-qwik-dirty-black/60 p-3 transition-all duration-200 hover:bg-qwik-dirty-black hover:shadow-lg hover:shadow-black/20"
+              style={entranceStyle}
             >
               <div
                 class="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
