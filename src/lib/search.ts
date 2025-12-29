@@ -1,5 +1,12 @@
-import type { CharacterEntry } from "./types";
+import type { CharacterEntries, CharacterEntry } from "./types";
 import { getCountryName } from "./utils";
+
+export function entriesToArray(entries: CharacterEntries): CharacterEntry[] {
+  return Object.entries(entries).map(([chars, countries]) => ({
+    chars,
+    countries,
+  }));
+}
 
 const CYRILLIC_REGEX = /[\u0400-\u04FF]/;
 
