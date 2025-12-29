@@ -27,67 +27,154 @@ const CATEGORY_MAP: Record<string, Category> = {
   domains: 'domains',
 };
 
-// Country name to ISO code mapping (common ones)
+// Country name to ISO code mapping (comprehensive)
 const COUNTRY_CODES: Record<string, string> = {
+  // A
   albania: 'al',
+  'american-samoa': 'as',
+  americansamoa: 'as',
+  andorra: 'ad',
   argentina: 'ar',
   australia: 'au',
   austria: 'at',
+  // B
+  bangladesh: 'bd',
   belgium: 'be',
+  bermuda: 'bm',
+  bhutan: 'bt',
+  bolivia: 'bo',
+  botswana: 'bw',
   brazil: 'br',
   bulgaria: 'bg',
+  // C
+  cambodia: 'kh',
   canada: 'ca',
   chile: 'cl',
   china: 'cn',
+  'christmas-island': 'cx',
+  christmasisland: 'cx',
   colombia: 'co',
   croatia: 'hr',
+  curacao: 'cw',
   'czech-republic': 'cz',
+  czechrepublic: 'cz',
   czechia: 'cz',
+  // D
   denmark: 'dk',
+  'dominican-republic': 'do',
+  dominicanrepublic: 'do',
+  // E
   ecuador: 'ec',
+  eswatini: 'sz',
   estonia: 'ee',
+  // F
+  'faroe-islands': 'fo',
+  faroeislands: 'fo',
   finland: 'fi',
   france: 'fr',
+  // G
   germany: 'de',
+  ghana: 'gh',
+  gibraltar: 'gi',
   greece: 'gr',
+  greenland: 'gl',
+  guam: 'gu',
+  guatemala: 'gt',
+  // H
   hungary: 'hu',
+  // I
+  iceland: 'is',
   india: 'in',
   indonesia: 'id',
   ireland: 'ie',
+  'isle-of-man': 'im',
+  isleofman: 'im',
   israel: 'il',
   italy: 'it',
+  // J
   japan: 'jp',
-  'south-korea': 'kr',
+  jersey: 'je',
+  jordan: 'jo',
+  // K
+  kenya: 'ke',
   korea: 'kr',
+  kyrgyzstan: 'kg',
+  // L
+  laos: 'la',
   latvia: 'lv',
+  lesotho: 'ls',
   lithuania: 'lt',
+  luxembourg: 'lu',
+  // M
+  madagascar: 'mg',
   malaysia: 'my',
+  malta: 'mt',
   mexico: 'mx',
+  monaco: 'mc',
+  mongolia: 'mn',
+  montenegro: 'me',
+  // N
   netherlands: 'nl',
   'new-zealand': 'nz',
+  newzealand: 'nz',
+  nigeria: 'ng',
+  'north-macedonia': 'mk',
+  northmacedonia: 'mk',
+  'northern-mariana-islands': 'mp',
+  northernmarianaislands: 'mp',
   norway: 'no',
+  // P
   peru: 'pe',
   philippines: 'ph',
   poland: 'pl',
   portugal: 'pt',
+  'puerto-rico': 'pr',
+  puertorico: 'pr',
+  // Q
+  qatar: 'qa',
+  // R
   romania: 'ro',
   russia: 'ru',
+  rwanda: 'rw',
+  // S
+  'san-marino': 'sm',
+  sanmarino: 'sm',
+  senegal: 'sn',
+  serbia: 'rs',
   singapore: 'sg',
   slovakia: 'sk',
   slovenia: 'si',
   'south-africa': 'za',
+  southafrica: 'za',
+  'south-korea': 'kr',
+  southkorea: 'kr',
   spain: 'es',
+  'sri-lanka': 'lk',
+  srilanka: 'lk',
   sweden: 'se',
   switzerland: 'ch',
   taiwan: 'tw',
   thailand: 'th',
   turkey: 'tr',
+  // T
+  tanzania: 'tz',
+  tunisia: 'tn',
+  // U
+  uganda: 'ug',
   ukraine: 'ua',
+  'united-arab-emirates': 'ae',
+  unitedarabemirates: 'ae',
+  uae: 'ae',
   'united-kingdom': 'gb',
+  unitedkingdom: 'gb',
   uk: 'gb',
   'united-states': 'us',
+  unitedstates: 'us',
   usa: 'us',
   uruguay: 'uy',
+  'us-virgin-islands': 'vi',
+  usvirginislands: 'vi',
+  // V
   vietnam: 'vn',
 };
 
@@ -154,6 +241,9 @@ async function downloadImage(url: string, tempPath: string): Promise<void> {
 
 /**
  * Scrape a category page from geomastr
+ *
+ * Strategy: Find all images matching /assets/media/{category}/*.jpg pattern
+ * and extract country from filename
  */
 async function scrapeCategory(geomastrCategory: string): Promise<void> {
   const category = CATEGORY_MAP[geomastrCategory];
@@ -165,49 +255,50 @@ async function scrapeCategory(geomastrCategory: string): Promise<void> {
   console.log(`\n=== Scraping ${category} from geomastr.com ===\n`);
 
   const url = `${BASE_URL}/${geomastrCategory}/`;
+  console.log(`Fetching: ${url}`);
   const html = await fetchPage(url);
   const $ = cheerio.load(html);
 
-  // Find all country sections
-  const countryLinks = $('a[href^="/country/"]');
-  const seenCountries = new Set<string>();
+  // Find all images - geomastr uses /assets/media/{category}/{country}.jpg pattern
+  const imagePattern = `/assets/media/${geomastrCategory}/`;
+  const images = $(`img[src*="${imagePattern}"], img[data-src*="${imagePattern}"]`);
 
-  for (const link of countryLinks.toArray()) {
-    const $link = $(link);
-    const countryHref = $link.attr('href');
-    if (!countryHref) continue;
+  console.log(`Found ${images.length} images matching pattern`);
 
-    // Extract country name from href
-    const countrySlug = countryHref.replace('/country/', '').replace('/', '');
-    if (seenCountries.has(countrySlug)) continue;
-    seenCountries.add(countrySlug);
+  const seenUrls = new Set<string>();
 
+  for (const img of images.toArray()) {
+    const $img = $(img);
+    const src = $img.attr('src') || $img.attr('data-src');
+    if (!src || seenUrls.has(src)) continue;
+    seenUrls.add(src);
+
+    // Extract country from filename: /assets/media/bollards/germany.jpg -> germany
+    // Also handles variants like germany2.jpg, australia3.jpg
+    const match = src.match(/\/assets\/media\/[^/]+\/([a-z-]+?)(\d*)\.(?:jpg|png|webp)/i);
+    if (!match) {
+      console.log(`  Could not parse: ${src}`);
+      continue;
+    }
+
+    const countrySlug = match[1].toLowerCase();
     const countryCode = getCountryCode(countrySlug);
+
     if (!countryCode) {
       console.log(`  Unknown country: ${countrySlug}`);
       continue;
     }
 
-    // Find images near this link (within same parent section)
-    const $parent = $link.closest('div, section, article');
-    const images = $parent.find(`img[src*="${geomastrCategory}"]`);
+    const imageUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
+    const tempPath = path.join(config.scrapedDir, 'temp', `${countrySlug}-${Date.now()}.jpg`);
 
-    for (const img of images.toArray()) {
-      const $img = $(img);
-      const src = $img.attr('src');
-      if (!src) continue;
-
-      const imageUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
-      const tempPath = path.join(config.scrapedDir, 'temp', `${countrySlug}-${Date.now()}.jpg`);
-
-      try {
-        console.log(`Downloading: ${countrySlug} - ${path.basename(src)}`);
-        await downloadImage(imageUrl, tempPath);
-        await addImage(tempPath, category, countryCode, 'geomastr', imageUrl);
-        await fs.unlink(tempPath); // Clean up temp file
-      } catch (err) {
-        console.error(`  Failed: ${err}`);
-      }
+    try {
+      console.log(`Downloading: ${countrySlug} (${countryCode})`);
+      await downloadImage(imageUrl, tempPath);
+      await addImage(tempPath, category, countryCode, 'geomastr', imageUrl);
+      await fs.unlink(tempPath);
+    } catch (err) {
+      console.error(`  Failed: ${err}`);
     }
   }
 }

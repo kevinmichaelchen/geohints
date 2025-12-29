@@ -186,16 +186,19 @@ export async function showStats(): Promise<void> {
   }
 }
 
-// CLI
-const command = process.argv[2];
+// CLI - only run when executed directly
+const isMainModule = process.argv[1]?.includes('process-images');
+if (isMainModule) {
+  const command = process.argv[2];
 
-if (command === 'process') {
-  processAllUnprocessed();
-} else if (command === 'stats') {
-  showStats();
-} else {
-  console.log('Usage: tsx process-images.ts <command>');
-  console.log('Commands:');
-  console.log('  process - Process all unprocessed images');
-  console.log('  stats   - Show manifest statistics');
+  if (command === 'process') {
+    processAllUnprocessed();
+  } else if (command === 'stats') {
+    showStats();
+  } else {
+    console.log('Usage: tsx process-images.ts <command>');
+    console.log('Commands:');
+    console.log('  process - Process all unprocessed images');
+    console.log('  stats   - Show manifest statistics');
+  }
 }

@@ -28,7 +28,7 @@ export const config = {
   r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
 
   /** Public URL for R2 images */
-  r2PublicUrl: process.env.R2_PUBLIC_URL || 'https://pub-xxx.r2.dev',
+  r2PublicUrl: process.env.R2_PUBLIC_URL || 'https://pub-3d7bacd76def438caae68643612e60f9.r2.dev',
 
   /** WEBP quality (0-100) */
   webpQuality: 82,

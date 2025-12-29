@@ -25,7 +25,8 @@
     "scrape:geohints": "tsx scripts/scrape-geohints.ts",
     "images:process": "tsx scripts/process-images.ts process",
     "images:stats": "tsx scripts/process-images.ts stats",
-    "images:upload": "tsx scripts/upload-r2.ts all"
+    "images:upload": "tsx scripts/upload-wrangler.ts all",
+    "images:upload:category": "tsx scripts/upload-wrangler.ts category"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.958.0",
