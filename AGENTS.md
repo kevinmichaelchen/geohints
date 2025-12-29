@@ -38,3 +38,10 @@ bd sync               # Sync with git
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 
+## Development Workflow
+
+1. Use atomic commits. One change, one commit.
+2. Use Conventional Commits. The beads task should be the scope.
+3. Use detailed commit messages.
+4. Make sure our checks (build, lint) are in a good standing before committing.
+5. Use parallel agents when you're absolutely sure tasks will have zero conflicts / overlapping files.
