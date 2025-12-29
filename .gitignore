@@ -45,3 +45,9 @@ lerna-debug.log*
 
 # bv (beads viewer) local config and caches
 .bv/
+
+# Scraped content (temporary, uploaded to R2)
+/scraped-images/
+
+# External repos (for local reference)
+/qwik-repo/
