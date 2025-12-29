@@ -1,6 +1,6 @@
 import { component$ } from "@builder.io/qwik";
-import { QwikLogo } from "../icons/qwik";
-import styles from "./header.module.css";
+import { QwikLogo } from "~/components/ui/QwikLogo";
+import styles from "./Header.module.css";
 import { LuCar, LuBook } from "@qwikest/icons/lucide";
 
 const navLinks = [

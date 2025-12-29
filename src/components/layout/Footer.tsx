@@ -1,6 +1,6 @@
 import { component$ } from "@builder.io/qwik";
 import { useServerTimeLoader } from "~/routes/layout";
-import styles from "./footer.module.css";
+import styles from "./Footer.module.css";
 
 export default component$(() => {
   const serverTime = useServerTimeLoader();
