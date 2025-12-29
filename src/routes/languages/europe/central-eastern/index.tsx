@@ -63,7 +63,10 @@ export default component$(() => {
           showing={filteredCharacters.value.length}
           total={allCharacters.length}
         />
-        <CharacterGrid characters={filteredCharacters.value} />
+        <CharacterGrid
+          characters={filteredCharacters.value}
+          highlightQuery={searchQuery.value}
+        />
       </section>
     </div>
   );
