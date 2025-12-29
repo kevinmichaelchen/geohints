@@ -2,7 +2,7 @@ import { component$ } from "@builder.io/qwik";
 import { Link } from "@builder.io/qwik-city";
 import { GeoHintsLogo } from "~/components/ui/GeoHintsLogo";
 import styles from "./Header.module.css";
-import { LuCar, LuBook, LuSearch } from "@qwikest/icons/lucide";
+import { LuCar, LuBook, LuSearch, LuCylinder } from "@qwikest/icons/lucide";
 
 const navLinks = [
   {
@@ -19,6 +19,11 @@ const navLinks = [
     label: "Analyze",
     href: "/analyze",
     icon: <LuSearch />,
+  },
+  {
+    label: "Bollards",
+    href: "/bollards",
+    icon: <LuCylinder />,
   },
 ];
 

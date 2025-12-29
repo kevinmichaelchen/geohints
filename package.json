@@ -57,7 +57,12 @@
     "wrangler": "^4.54.0"
   },
   "dependencies": {
+    "@effect/cli": "^0.73.0",
+    "@effect/platform": "^0.94.0",
+    "@effect/platform-node": "^0.104.0",
+    "@effect/schema": "^0.75.5",
     "@qwikest/icons": "^0.0.13",
-    "@unpic/qwik": "^1.0.0"
+    "@unpic/qwik": "^1.0.0",
+    "effect": "^3.19.13"
   }
 }
