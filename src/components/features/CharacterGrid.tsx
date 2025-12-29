@@ -9,10 +9,10 @@ interface CharacterGridProps {
 export const CharacterGrid = component$<CharacterGridProps>(
   ({ characters }) => {
     return (
-      <div class="grid grid-cols-1 gap-y-5 md:gap-y-10 lg:gap-y-20 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+      <div class="@container grid grid-cols-1 gap-y-5 @md:gap-y-10 @lg:gap-y-20 @sm:grid-cols-2 @md:grid-cols-3 @lg:grid-cols-4 @xl:grid-cols-5 @2xl:grid-cols-6">
         {Object.entries(characters).map(([char, codes], i) => (
           <div key={i}>
-            <div class="text-3xl lg:text-5xl lg:mb-5">{char}</div>
+            <div class="text-3xl @lg:text-5xl @lg:mb-5">{char}</div>
             <ul>
               {codes.map((code, j) => (
                 <li key={j}>

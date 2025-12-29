@@ -7,7 +7,7 @@ export const Hero = component$(() => {
       <div class="flex justify-center mb-8">
         <GeoHintsLogo height={80} width={320} />
       </div>
-      <h1 class="text-4xl md:text-6xl font-bold mb-4">
+      <h1 class="text-4xl md:text-6xl font-bold mb-4 text-shadow-sm">
         Master <span class="text-qwik-light-blue">GeoGuessr</span> with Visual
         Clues
       </h1>
