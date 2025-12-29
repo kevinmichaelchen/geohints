@@ -1,5 +1,6 @@
 import { component$ } from "@builder.io/qwik";
 import { Link } from "@builder.io/qwik-city";
+import { Image } from "@unpic/qwik";
 
 interface CategoryCardProps {
   title: string;
@@ -34,13 +35,13 @@ export const CategoryCard = component$<CategoryCardProps>(
 
         {/* Image container */}
         <div class="aspect-video relative overflow-hidden">
-          <img
+          <Image
             src={imageSrc}
             alt={title}
-            class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
+            layout="constrained"
             width={400}
             height={225}
+            class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
           />
           {/* Image overlay gradient */}
           <div
