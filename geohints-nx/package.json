@@ -31,10 +31,12 @@
     "@effect/platform-node": "^0.104.0",
     "@qwikest/icons": "^0.0.13",
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/sharp": "^0.32.0",
     "@unpic/qwik": "^1.0.0",
     "autoprefixer": "^10.4.23",
     "cheerio": "^1.1.2",
     "effect": "^3.19.13",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4.1.18",
     "vite-tsconfig-paths": "^6.0.3"
   }

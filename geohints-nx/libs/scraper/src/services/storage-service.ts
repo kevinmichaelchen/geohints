@@ -14,6 +14,7 @@ import { ScraperConfig } from "../config/scraper-config"
 import { FsError, ParseError } from "./errors"
 import type { Sha256Hash } from "../../../shared/src/schemas/manifest"
 import { Manifest, emptyManifest } from "../../../shared/src/schemas/manifest"
+import type { ProcessedImage } from "./image-service"
 
 // ---------------------------------------------------------------------------
 // Service Interface
@@ -60,6 +61,16 @@ export interface StorageServiceShape {
    * Get the full path for a relative path.
    */
   readonly resolvePath: (relativePath: string) => Effect.Effect<string>
+
+  /**
+   * Save a fully processed image with all srcset variants.
+   * Saves: {basePath}/{hash}-original.webp, {hash}-400w.webp, {hash}-800w.webp, {hash}-1200w.webp
+   */
+  readonly saveProcessedImage: (
+    basePath: string,
+    hash: string,
+    processed: ProcessedImage
+  ) => Effect.Effect<{ original: string; variants: Record<string, string> }, FsError>
 }
 
 // ---------------------------------------------------------------------------
@@ -272,6 +283,32 @@ export class StorageService extends Context.Tag("@geohints/StorageService")<
           return hashHex as Sha256Hash
         })
 
+      const saveProcessedImage = (
+        basePath: string,
+        hash: string,
+        processed: ProcessedImage
+      ): Effect.Effect<{ original: string; variants: Record<string, string> }, FsError> =>
+        Effect.gen(function* () {
+          const shortHash = hash.slice(0, 8)
+
+          // Ensure directory exists
+          yield* ensureDir(basePath)
+
+          // Save original
+          const originalPath = `${basePath}/${shortHash}-original.webp`
+          yield* saveImage(originalPath, processed.original)
+
+          // Save variants
+          const variants: Record<string, string> = {}
+          for (const [size, data] of Object.entries(processed.variants)) {
+            const variantPath = `${basePath}/${shortHash}-${size}.webp`
+            yield* saveImage(variantPath, data)
+            variants[size] = variantPath
+          }
+
+          return { original: originalPath, variants }
+        })
+
       return {
         saveImage,
         readManifest,
@@ -280,6 +317,7 @@ export class StorageService extends Context.Tag("@geohints/StorageService")<
         exists,
         ensureDir,
         resolvePath,
+        saveProcessedImage,
       }
     })
   )

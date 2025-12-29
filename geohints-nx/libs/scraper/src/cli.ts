@@ -20,7 +20,10 @@ import { HttpService } from "./services/http-service"
 import { StorageService } from "./services/storage-service"
 import { scrapeGeomastr, scrapeAllGeomastr } from "./scrapers/geomastr"
 import { scrapeGeohints, scrapeAllGeohints } from "./scrapers/geohints"
+import { ImageService } from "./services/image-service"
 import { CATEGORIES, type Category, type Source } from "../../shared/src/schemas/category"
+import * as fs from "node:fs/promises"
+import * as path from "node:path"
 
 // ---------------------------------------------------------------------------
 // Layer Composition
@@ -54,12 +57,16 @@ const StorageServiceLayer = StorageService.layer.pipe(
   Layer.provide(ConfigLayer)
 )
 
+// ImageService is standalone (uses Sharp)
+const ImageServiceLayer = ImageService.layer
+
 // Combine all layers
 const MainLayer = Layer.mergeAll(
   PlatformLayer,
   ConfigLayer,
   HttpServiceLayer,
-  StorageServiceLayer
+  StorageServiceLayer,
+  ImageServiceLayer
 )
 
 // ---------------------------------------------------------------------------
@@ -152,13 +159,126 @@ const statsCommand = Command.make("stats", {}, () =>
   }).pipe(Effect.provide(MainLayer))
 )
 
+/**
+ * Process command - converts existing images to WEBP with srcset variants.
+ */
+const processCommand = Command.make(
+  "process",
+  {
+    dryRun: Options.boolean("dry-run").pipe(Options.withDefault(false)),
+  },
+  ({ dryRun }) =>
+    Effect.gen(function* () {
+      const imageService = yield* ImageService
+      const storage = yield* StorageService
+      const config = yield* ScraperConfig
+
+      yield* Effect.log(`Processing images in ${config.outputDir}...`)
+      if (dryRun) {
+        yield* Effect.log(`(Dry run - no files will be modified)`)
+      }
+
+      // Find all image files that need processing
+      const baseDir = config.outputDir
+      let processed = 0
+      let skipped = 0
+      let errors = 0
+
+      // Walk the directory recursively
+      const walkDir = async (dir: string): Promise<string[]> => {
+        const entries = await fs.readdir(dir, { withFileTypes: true })
+        const files: string[] = []
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name)
+          if (entry.isDirectory()) {
+            files.push(...(await walkDir(fullPath)))
+          } else if (entry.name.endsWith(".webp") && !entry.name.includes("-400w") && !entry.name.includes("-800w") && !entry.name.includes("-1200w") && !entry.name.includes("-original")) {
+            files.push(fullPath)
+          }
+        }
+        return files
+      }
+
+      const files = yield* Effect.promise(() => walkDir(baseDir))
+      yield* Effect.log(`Found ${files.length} images to process`)
+
+      for (const filePath of files) {
+        const relativePath = path.relative(baseDir, filePath)
+
+        try {
+          // Read the raw file
+          const rawData = yield* Effect.promise(() => fs.readFile(filePath))
+
+          // Validate it's not already proper WEBP with variants
+          const dir = path.dirname(filePath)
+          const basename = path.basename(filePath, ".webp")
+          const variant400 = path.join(dir, `${basename}-400w.webp`)
+
+          const hasVariants = yield* Effect.promise(async () => {
+            try {
+              await fs.access(variant400)
+              return true
+            } catch {
+              return false
+            }
+          })
+
+          if (hasVariants) {
+            skipped++
+            continue
+          }
+
+          if (dryRun) {
+            yield* Effect.log(`Would process: ${relativePath}`)
+            processed++
+            continue
+          }
+
+          // Process the image
+          const processedImage = yield* imageService.processImage(new Uint8Array(rawData))
+
+          // Compute hash for naming
+          const hash = yield* storage.hashContent(new Uint8Array(rawData))
+          const shortHash = hash.slice(0, 8)
+
+          // Save the processed variants
+          const originalPath = path.join(dir, `${shortHash}-original.webp`)
+          const path400 = path.join(dir, `${shortHash}-400w.webp`)
+          const path800 = path.join(dir, `${shortHash}-800w.webp`)
+          const path1200 = path.join(dir, `${shortHash}-1200w.webp`)
+
+          yield* Effect.promise(() => fs.writeFile(originalPath, processedImage.original))
+          yield* Effect.promise(() => fs.writeFile(path400, processedImage.variants["400w"]))
+          yield* Effect.promise(() => fs.writeFile(path800, processedImage.variants["800w"]))
+          yield* Effect.promise(() => fs.writeFile(path1200, processedImage.variants["1200w"]))
+
+          // Remove old file
+          yield* Effect.promise(() => fs.unlink(filePath))
+
+          processed++
+          if (processed % 50 === 0) {
+            yield* Effect.log(`Processed ${processed}/${files.length} images...`)
+          }
+        } catch (error) {
+          yield* Effect.logWarning(`Failed to process ${relativePath}: ${error}`)
+          errors++
+        }
+      }
+
+      yield* Effect.log(`\n=== Processing Complete ===`)
+      yield* Effect.log(`Processed: ${processed}`)
+      yield* Effect.log(`Skipped (already done): ${skipped}`)
+      yield* Effect.log(`Errors: ${errors}`)
+    }).pipe(Effect.provide(MainLayer))
+)
+
 // ---------------------------------------------------------------------------
 // Main CLI
 // ---------------------------------------------------------------------------
 
 const mainCommand = Command.make("geohints-scraper").pipe(
   Command.withDescription("GeoHints image scraper using Effect-TS"),
-  Command.withSubcommands([scrapeCommand, statsCommand])
+  Command.withSubcommands([scrapeCommand, statsCommand, processCommand])
 )
 
 const cli = Command.run(mainCommand, {
