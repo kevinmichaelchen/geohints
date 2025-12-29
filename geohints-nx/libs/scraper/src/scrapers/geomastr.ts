@@ -39,8 +39,55 @@ type GeomastrCountry = typeof GeomastrCountry.Type
 // HTML Parsing
 // ---------------------------------------------------------------------------
 
+// Map our category names to geomastr URL paths (they use different naming)
+const CATEGORY_TO_PATH: Record<string, string> = {
+  "bollards": "bollards",
+  "license-plates": "licenseplates",
+  "road-lines": "roadlines",
+  "street-signs": "streetsigns",
+  "utility-poles": "utilitypoles",
+}
+
+// Common country name to ISO code mappings
+const COUNTRY_CODES: Record<string, string> = {
+  "united states": "US", "usa": "US", "united kingdom": "GB", "uk": "GB",
+  "south korea": "KR", "north korea": "KP", "south africa": "ZA",
+  "new zealand": "NZ", "czech republic": "CZ", "czechia": "CZ",
+  "uae": "AE", "united arab emirates": "AE", "austria": "AT",
+  "australia": "AU", "germany": "DE", "france": "FR", "spain": "ES",
+  "italy": "IT", "netherlands": "NL", "belgium": "BE", "sweden": "SE",
+  "norway": "NO", "denmark": "DK", "finland": "FI", "poland": "PL",
+  "portugal": "PT", "switzerland": "CH", "ireland": "IE", "greece": "GR",
+  "japan": "JP", "china": "CN", "india": "IN", "brazil": "BR",
+  "argentina": "AR", "mexico": "MX", "canada": "CA", "russia": "RU",
+}
+
+/**
+ * Extract country code from country name or slug.
+ */
+const getCountryCode = (name: string): string => {
+  const lower = name.toLowerCase().trim()
+  return COUNTRY_CODES[lower] ?? name.slice(0, 2).toUpperCase()
+}
+
+/**
+ * Extract country name from image URL path.
+ * e.g., /assets/media/bollards/austria.jpg -> "Austria"
+ */
+const extractCountryFromPath = (path: string): string => {
+  const filename = path.split("/").pop() ?? ""
+  // Remove extension and trailing numbers (austria2.jpg -> austria)
+  const slug = filename.replace(/\d*\.\w+$/, "")
+  // Convert slug to title case (united-states -> United States)
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
+
 /**
  * Parse country data from geomastr HTML.
+ * Geomastr uses H3 headings like "### Austria Bollards" with images in /assets/media/{category}/
  */
 const parseCountryData = (
   html: string,
@@ -48,33 +95,44 @@ const parseCountryData = (
 ): Effect.Effect<readonly GeomastrCountry[], ParseError> =>
   Effect.gen(function* () {
     const $ = cheerio.load(html)
-    const countries: GeomastrCountry[] = []
+    const countryMap = new Map<string, GeomastrCountry>()
 
-    // Geomastr organizes by country sections
-    $(".country-section, [data-country]").each((_, element) => {
-      const $el = $(element)
-      const name = $el.find(".country-name, h2, h3").first().text().trim()
-      const code = $el.attr("data-country") ?? name.slice(0, 2).toUpperCase()
+    // Category path in URLs - use mapping since geomastr uses different naming
+    const categoryPath = CATEGORY_TO_PATH[category] ?? category
 
-      const images: string[] = []
-      $el.find("img").each((_, img) => {
-        const src = $(img).attr("src") ?? $(img).attr("data-src")
-        if (src && src.includes(category)) {
-          images.push(src.startsWith("http") ? src : `https://geomastr.com${src}`)
+    // Find all images that are in the category directory
+    $("img").each((_, img) => {
+      const src = $(img).attr("src") ?? $(img).attr("data-src") ?? ""
+
+      // Check if this is an image for our category
+      if (src.includes(`/assets/media/${categoryPath}/`) || src.includes(`/${categoryPath}/`)) {
+        const fullUrl = src.startsWith("http") ? src : `https://geomastr.com${src}`
+        const countryName = extractCountryFromPath(src)
+        const countryCode = getCountryCode(countryName)
+
+        // Group images by country
+        const existing = countryMap.get(countryCode)
+        if (existing) {
+          existing.images.push(fullUrl)
+        } else {
+          countryMap.set(countryCode, {
+            name: countryName,
+            code: countryCode,
+            images: [fullUrl],
+          })
         }
-      })
-
-      if (images.length > 0) {
-        countries.push({ name, code, images })
       }
     })
 
-    // Fallback: try to find all images with category in URL
+    // Convert map to array
+    const countries = Array.from(countryMap.values())
+
+    // Fallback: try to find all images if no category-specific images found
     if (countries.length === 0) {
       const allImages: string[] = []
       $("img").each((_, img) => {
         const src = $(img).attr("src") ?? $(img).attr("data-src")
-        if (src) {
+        if (src && !src.includes("/flags/")) {
           const fullUrl = src.startsWith("http") ? src : `https://geomastr.com${src}`
           allImages.push(fullUrl)
         }

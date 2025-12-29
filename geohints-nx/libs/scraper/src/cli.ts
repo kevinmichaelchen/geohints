@@ -19,7 +19,8 @@ import { ScraperConfig } from "./config/scraper-config"
 import { HttpService } from "./services/http-service"
 import { StorageService } from "./services/storage-service"
 import { scrapeGeomastr, scrapeAllGeomastr } from "./scrapers/geomastr"
-import { CATEGORIES, type Category } from "../../shared/src/schemas/category"
+import { scrapeGeohints, scrapeAllGeohints } from "./scrapers/geohints"
+import { CATEGORIES, type Category, type Source } from "../../shared/src/schemas/category"
 
 // ---------------------------------------------------------------------------
 // Layer Composition
@@ -84,15 +85,28 @@ const scrapeCommand = Command.make(
       yield* Effect.log(`Starting scraper...`)
       yield* Effect.log(`Source: ${source}`)
 
+      const src = source as Source
+
       if (all) {
-        yield* Effect.log(`Scraping all categories...`)
-        const manifest = yield* scrapeAllGeomastr()
+        yield* Effect.log(`Scraping all categories from ${source}...`)
+        const manifest = src === "geohints"
+          ? yield* scrapeAllGeohints()
+          : yield* scrapeAllGeomastr()
         yield* Effect.log(`Done! Total entries: ${manifest.entries.length}`)
       } else if (category._tag === "Some") {
         const cat = category.value as Category
-        yield* Effect.log(`Scraping category: ${cat}`)
-        const entries = yield* scrapeGeomastr(cat)
-        yield* Effect.log(`Done! Scraped ${entries.length} images`)
+        const storage = yield* StorageService
+        yield* Effect.log(`Scraping category: ${cat} from ${source}`)
+        const entries = src === "geohints"
+          ? yield* scrapeGeohints(cat)
+          : yield* scrapeGeomastr(cat)
+
+        // Update manifest with new entries
+        const existingManifest = yield* storage.readManifest()
+        const newManifest = existingManifest.merge(Array.from(entries))
+        yield* storage.writeManifest(newManifest)
+
+        yield* Effect.log(`Done! Scraped ${entries.length} images, manifest now has ${newManifest.entries.length} total entries`)
       } else {
         yield* Effect.logError(
           "Please specify --category <name> or --all"
