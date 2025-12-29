@@ -1,10 +1,10 @@
 import { component$ } from "@builder.io/qwik";
 import { Image } from "@unpic/qwik";
 
-type Country = {
+interface Country {
   name: string;
-  numImages: Number;
-};
+  numImages: number;
+}
 
 const countries: Country[] = [
   {
