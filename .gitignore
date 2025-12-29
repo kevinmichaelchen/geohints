@@ -42,3 +42,6 @@ lerna-debug.log*
 
 # Vercel
 .vercel
+
+# bv (beads viewer) local config and caches
+.bv/
