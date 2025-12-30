@@ -91,6 +91,7 @@ html {
   tab-size: 4;
   font-family:
     "Poppins",
+    "Poppins fallback",
     ui-sans-serif,
     system-ui,
     -apple-system,

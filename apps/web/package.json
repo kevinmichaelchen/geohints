@@ -12,5 +12,8 @@
     "dev": "vite --mode ssr",
     "preview": "qwik build preview && vite preview --open",
     "start": "vite --open --mode ssr"
+  },
+  "devDependencies": {
+    "fontaine": "^0.7.0"
   }
 }
