@@ -29,6 +29,12 @@ const categories = [
     href: "/bollards",
     imageSrc: bollardImg("au", 1),
   },
+  {
+    title: "Domains",
+    description: "Identify countries by website URL extensions",
+    href: "/domains",
+    imageSrc: bollardImg("ch", 1),
+  },
   // Coming soon categories
   {
     title: "License Plates",

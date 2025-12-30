@@ -2,6 +2,8 @@
   border-bottom: 1px solid rgba(139, 69, 19, 0.15);
   background: linear-gradient(to bottom, var(--color-parchment-light), var(--color-parchment));
   padding: 1rem 0;
+  position: relative;
+  z-index: 50;
 }
 
 .wrapper {
@@ -18,70 +20,199 @@
   display: block;
 }
 
-.header ul {
+/* Desktop navigation */
+.desktopNav {
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  gap: 24px;
+  display: none;
+  gap: 16px;
 }
 
-.header li {
+.desktopNav li {
   display: inline-block;
   margin: 0;
   padding: 0;
 }
 
-.header li a {
+.desktopNav li a {
   color: var(--color-ink);
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 6px 10px;
   text-decoration: none;
   font-family: "Libre Baskerville", Georgia, serif;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 400;
   border-radius: 2px;
   transition: all 0.2s ease;
   border-bottom: 2px solid transparent;
 }
 
-.header li a:hover {
+.desktopNav li a:hover {
   color: var(--color-burnt-sienna);
   border-bottom-color: var(--color-antique-gold);
 }
 
 /* Icon styling */
-.header li a svg {
-  width: 16px;
-  height: 16px;
+.desktopNav li a svg {
+  width: 14px;
+  height: 14px;
   opacity: 0.7;
   transition: opacity 0.2s ease;
 }
 
-.header li a:hover svg {
+.desktopNav li a:hover svg {
   opacity: 1;
 }
 
-@media (max-width: 640px) {
-  .header ul {
-    gap: 12px;
+/* Mobile menu button */
+.menuButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid rgba(139, 69, 19, 0.2);
+  border-radius: 4px;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menuButton:hover {
+  background: rgba(139, 69, 19, 0.1);
+  border-color: var(--color-burnt-sienna);
+  color: var(--color-burnt-sienna);
+}
+
+.menuButton svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Mobile overlay */
+.mobileOverlay {
+  position: fixed;
+  inset: 0;
+  top: 73px; /* Height of header */
+  background: rgba(26, 26, 26, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 40;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Mobile navigation */
+.mobileNav {
+  background: var(--color-parchment-light);
+  border-bottom: 1px solid rgba(139, 69, 19, 0.2);
+  box-shadow: 0 4px 20px rgba(139, 69, 19, 0.15);
+  animation: slideDown 0.25s ease-out;
+}
+
+.mobileNav ul {
+  margin: 0;
+  padding: 0.5rem 0;
+  list-style: none;
+}
+
+.mobileNav li {
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+.mobileNav li a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  color: var(--color-ink);
+  text-decoration: none;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.mobileNav li a:hover {
+  background: rgba(139, 69, 19, 0.08);
+  color: var(--color-burnt-sienna);
+  border-left-color: var(--color-burnt-sienna);
+}
+
+.mobileNav li a svg {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+}
+
+.mobileNav li a:hover svg {
+  opacity: 1;
+}
+
+/* Show desktop nav on larger screens */
+@media (min-width: 768px) {
+  .desktopNav {
+    display: flex;
   }
 
-  .header li a {
-    font-size: 0.75rem;
-    padding: 4px 8px;
+  .menuButton {
+    display: none;
   }
 
-  .header li a svg {
-    width: 14px;
-    height: 14px;
+  .mobileOverlay,
+  .mobileNav {
+    display: none;
   }
 }
 
-@media (min-width: 450px) {
-  .header li {
-    display: inline-block;
+/* Larger screens - more spacing */
+@media (min-width: 1024px) {
+  .desktopNav {
+    gap: 20px;
+  }
+
+  .desktopNav li a {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+
+  .desktopNav li a svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
