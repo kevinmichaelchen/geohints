@@ -4,6 +4,7 @@
  */
 
 import { bollardCountries, type BollardCountry } from "./bollards";
+import { getCountryMeta, type CountryMeta } from "./country-meta";
 
 /**
  * Map for case-insensitive country lookup by ISO code
@@ -35,5 +36,6 @@ export function isValidCountryCode(code: string): boolean {
   return countryByCode.has(code.toLowerCase());
 }
 
-// Re-export types
+// Re-export types and utilities from country-meta
+export { getCountryMeta, type CountryMeta };
 export type { BollardCountry };

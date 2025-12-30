@@ -4,49 +4,40 @@
  * Total: 25 countries, 76 images
  */
 
+import { enrichWithMeta, getContinents, type CountryMeta } from "./country-meta";
+
 export const R2_BASE_URL = "https://pub-3d7bacd76def438caae68643612e60f9.r2.dev";
 
-export interface FollowCarCountry {
-  /** ISO 3166-1 alpha-2 country code (uppercase) */
-  code: string;
-  /** Country name */
-  name: string;
-  /** Continent */
-  continent: string;
+/** Feature-specific data for follow cars */
+interface FollowCarData {
   /** Image content hashes (first 8 chars) */
   images: string[];
 }
 
-export const followCarCountries: FollowCarCountry[] = [
-  { code: "BW", name: "Botswana", continent: "Africa", images: ["61afd9f1"] },
-  { code: "BG", name: "Bulgaria", continent: "Europe", images: ["8356be77"] },
-  { code: "CA", name: "Canada", continent: "North America", images: ["4825b2d0"] },
-  { code: "CC", name: "Cocos (Keeling) Islands", continent: "Oceania", images: ["6ba89dd3"] },
-  { code: "CR", name: "Costa Rica", continent: "North America", images: ["905108eb", "01889a1c"] },
-  { code: "DK", name: "Denmark", continent: "Europe", images: ["8ff2037e"] },
-  {
-    code: "IE",
-    name: "Ireland",
-    continent: "Europe",
-    images: ["987fc9e3", "07a8a486", "35b4afdb"],
-  },
-  { code: "IL", name: "Israel", continent: "Asia", images: ["58dc9ffe", "af8853e9"] },
-  { code: "IT", name: "Italy", continent: "Europe", images: ["eafd2fa3", "5f63d7c8"] },
-  { code: "JP", name: "Japan", continent: "Asia", images: ["aea388d5"] },
-  { code: "JO", name: "Jordan", continent: "Asia", images: ["7ee8b75e", "ce849531"] },
-  {
-    code: "KE",
-    name: "Kenya",
-    continent: "Africa",
-    images: ["243bed95", "3fa4424f", "e2ef15ab", "d5612362", "7b8940ac", "b6957c08"],
-  },
-  { code: "MY", name: "Malaysia", continent: "Asia", images: ["7589cfb1"] },
-  { code: "MN", name: "Mongolia", continent: "Asia", images: ["b96e273f"] },
-  { code: "ME", name: "Montenegro", continent: "Europe", images: ["beddc36d"] },
-  {
-    code: "NG",
-    name: "Nigeria",
-    continent: "Africa",
+/** Follow car country with full metadata */
+export type FollowCarCountry = CountryMeta & FollowCarData;
+
+/**
+ * Raw follow car data - just country codes and their image hashes
+ * Country metadata (name, continent, regions) comes from country-meta.ts
+ */
+const followCarData: Record<string, FollowCarData> = {
+  BW: { images: ["61afd9f1"] },
+  BG: { images: ["8356be77"] },
+  CA: { images: ["4825b2d0"] },
+  CC: { images: ["6ba89dd3"] },
+  CR: { images: ["905108eb", "01889a1c"] },
+  DK: { images: ["8ff2037e"] },
+  IE: { images: ["987fc9e3", "07a8a486", "35b4afdb"] },
+  IL: { images: ["58dc9ffe", "af8853e9"] },
+  IT: { images: ["eafd2fa3", "5f63d7c8"] },
+  JP: { images: ["aea388d5"] },
+  JO: { images: ["7ee8b75e", "ce849531"] },
+  KE: { images: ["243bed95", "3fa4424f", "e2ef15ab", "d5612362", "7b8940ac", "b6957c08"] },
+  MY: { images: ["7589cfb1"] },
+  MN: { images: ["b96e273f"] },
+  ME: { images: ["beddc36d"] },
+  NG: {
     images: [
       "aef63ea7",
       "164ca3a0",
@@ -68,21 +59,13 @@ export const followCarCountries: FollowCarCountry[] = [
       "cf2d81aa",
     ],
   },
-  { code: "NO", name: "Norway", continent: "Europe", images: ["a96566ed"] },
-  {
-    code: "PS",
-    name: "Palestine",
-    continent: "Asia",
-    images: ["8a39312e", "58b17da5", "b24697c0"],
-  },
-  { code: "PH", name: "Philippines", continent: "Asia", images: ["503282a6"] },
-  { code: "RU", name: "Russia", continent: "Europe", images: ["6adca507"] },
-  { code: "ZA", name: "South Africa", continent: "Africa", images: ["b9def49a"] },
-  { code: "ES", name: "Spain", continent: "Europe", images: ["31c30585"] },
-  {
-    code: "TN",
-    name: "Tunisia",
-    continent: "Africa",
+  NO: { images: ["a96566ed"] },
+  PS: { images: ["8a39312e", "58b17da5", "b24697c0"] },
+  PH: { images: ["503282a6"] },
+  RU: { images: ["6adca507"] },
+  ZA: { images: ["b9def49a"] },
+  ES: { images: ["31c30585"] },
+  TN: {
     images: [
       "1aa31f30",
       "6ae5eb13",
@@ -96,11 +79,8 @@ export const followCarCountries: FollowCarCountry[] = [
       "a0ce1456",
     ],
   },
-  { code: "GB", name: "United Kingdom", continent: "Europe", images: ["ea465adf", "744222f7"] },
-  {
-    code: "US",
-    name: "United States",
-    continent: "North America",
+  GB: { images: ["ea465adf", "744222f7"] },
+  US: {
     images: [
       "66e09dbb",
       "edc7f976",
@@ -116,9 +96,13 @@ export const followCarCountries: FollowCarCountry[] = [
       "1451ee9d",
     ],
   },
-];
+};
 
-export const continents = [...new Set(followCarCountries.map((c) => c.continent))].sort();
+/** Follow car countries with full metadata, sorted by name */
+export const followCarCountries: FollowCarCountry[] = enrichWithMeta(followCarData);
+
+/** All continents that have follow car data */
+export const continents = getContinents();
 
 /**
  * Get R2 URL for a follow car image

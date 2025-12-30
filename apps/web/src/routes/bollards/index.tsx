@@ -9,6 +9,7 @@ import {
   getBollardImageUrl,
   getBollardSrcset,
 } from "~/data/bollards";
+import { matchesRegion } from "~/data/country-meta";
 
 // Flag emoji helper
 const getFlagEmoji = (code: string) => {
@@ -36,7 +37,7 @@ export default component$(() => {
 
   const filteredCountries = useComputed$(() => {
     if (!selectedContinent.value) return bollardCountries;
-    return bollardCountries.filter((c) => c.continent === selectedContinent.value);
+    return bollardCountries.filter((c) => matchesRegion(c, selectedContinent.value));
   });
 
   // Group by continent for display
@@ -86,7 +87,7 @@ export default component$(() => {
                 All ({bollardCountries.length})
               </button>
               {continents.map((continent) => {
-                const count = bollardCountries.filter((c) => c.continent === continent).length;
+                const count = bollardCountries.filter((c) => matchesRegion(c, continent)).length;
                 return (
                   <button
                     key={continent}
