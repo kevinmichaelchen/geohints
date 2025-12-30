@@ -98,7 +98,10 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<R2Service, R2S
         r2Key: string,
       ): Effect.Effect<UploadResult, R2UploadError> =>
         pipe(
-          Effect.gen(function* () {
+          Effect.fn("R2Service.upload")(function* (_localPath: string, _r2Key: string) {
+            yield* Effect.annotateCurrentSpan("localPath", _localPath);
+            yield* Effect.annotateCurrentSpan("r2Key", _r2Key);
+
             // Build wrangler command
             const command = Command.make(
               "npx",
@@ -106,8 +109,8 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<R2Service, R2S
               "r2",
               "object",
               "put",
-              `${config.r2BucketName}/${r2Key}`,
-              `--file=${localPath}`,
+              `${config.r2BucketName}/${_r2Key}`,
+              `--file=${_localPath}`,
               "--content-type=image/webp",
             );
 
@@ -115,22 +118,22 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<R2Service, R2S
             const exitCode = yield* pipe(
               executor.start(command),
               Effect.flatMap((process) => process.exitCode),
+              Effect.scoped,
             );
 
             if (exitCode !== 0) {
               return yield* Effect.fail(
                 new R2UploadError({
-                  localPath,
-                  r2Key,
+                  localPath: _localPath,
+                  r2Key: _r2Key,
                   exitCode,
                   stderr: `Exit code: ${exitCode}`,
                 }),
               );
             }
 
-            return { localPath, r2Key, success: true } as UploadResult;
-          }),
-          Effect.scoped,
+            return { localPath: _localPath, r2Key: _r2Key, success: true } as UploadResult;
+          })(localPath, r2Key),
           Effect.retry(retrySchedule),
           Effect.catchAll(() =>
             Effect.succeed({ localPath, r2Key, success: false } as UploadResult),
@@ -139,84 +142,89 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<R2Service, R2S
 
       const exists = (r2Key: string): Effect.Effect<boolean> =>
         pipe(
-          Effect.gen(function* () {
+          Effect.fn("R2Service.exists")(function* (_r2Key: string) {
+            yield* Effect.annotateCurrentSpan("r2Key", _r2Key);
+
             const command = Command.make(
               "npx",
               "wrangler",
               "r2",
               "object",
               "get",
-              `${config.r2BucketName}/${r2Key}`,
+              `${config.r2BucketName}/${_r2Key}`,
               "--pipe",
             );
 
             const exitCode = yield* pipe(
               executor.start(command),
               Effect.flatMap((process) => process.exitCode),
+              Effect.scoped,
             );
 
             return exitCode === 0;
-          }),
-          Effect.scoped,
+          })(r2Key),
           Effect.catchAll(() => Effect.succeed(false)),
         );
 
-      const uploadMany = (
+      const uploadMany = Effect.fn("R2Service.uploadMany")(function* (
         files: readonly { localPath: string; r2Key: string }[],
-      ): Effect.Effect<UploadStats> =>
-        Effect.gen(function* () {
-          let uploaded = 0;
-          let skipped = 0;
-          let failed = 0;
-          let processed = 0;
-          const total = files.length;
-          const logInterval = Math.max(10, Math.floor(total / 20)); // Log every 5% or 10 files
+      ) {
+        yield* Effect.annotateCurrentSpan("fileCount", files.length);
 
-          yield* Effect.log(`Starting upload of ${total} files...`);
+        let uploaded = 0;
+        let skipped = 0;
+        let failed = 0;
+        let processed = 0;
+        const total = files.length;
+        const logInterval = Math.max(10, Math.floor(total / 20)); // Log every 5% or 10 files
 
-          yield* Stream.fromIterable(files).pipe(
-            Stream.mapEffect(
-              ({ localPath, r2Key }) =>
-                pipe(
-                  Effect.gen(function* () {
-                    // Skip existence check for speed - just upload and let R2 overwrite
-                    // This is much faster than 2 wrangler calls per file
-                    const result = yield* upload(localPath, r2Key);
-                    if (result.success) {
-                      uploaded++;
-                    } else {
-                      failed++;
-                    }
-                    return { ...result, skipped: false };
-                  }),
-                  Effect.tap(() => {
-                    processed++;
-                    // Log progress periodically
-                    if (processed % logInterval === 0 || processed === total) {
-                      return Effect.log(
-                        `Progress: ${processed}/${total} (${Math.round((processed / total) * 100)}%) - ` +
-                          `uploaded: ${uploaded}, failed: ${failed}`,
-                      );
-                    }
-                    return Effect.void;
-                  }),
-                  Effect.catchAll(() => {
+        yield* Effect.log(`Starting upload of ${total} files...`);
+
+        yield* Stream.fromIterable(files).pipe(
+          Stream.mapEffect(
+            ({ localPath, r2Key }) =>
+              pipe(
+                Effect.gen(function* () {
+                  // Skip existence check for speed - just upload and let R2 overwrite
+                  // This is much faster than 2 wrangler calls per file
+                  const result = yield* upload(localPath, r2Key);
+                  if (result.success) {
+                    uploaded++;
+                  } else {
                     failed++;
-                    processed++;
-                    return Effect.succeed({ localPath, r2Key, success: false, skipped: false });
-                  }),
-                ),
-              { concurrency: config.concurrency },
-            ),
-            Stream.runDrain,
-          );
+                  }
+                  return { ...result, skipped: false };
+                }),
+                Effect.tap(() => {
+                  processed++;
+                  // Log progress periodically
+                  if (processed % logInterval === 0 || processed === total) {
+                    return Effect.log(
+                      `Progress: ${processed}/${total} (${Math.round((processed / total) * 100)}%) - ` +
+                        `uploaded: ${uploaded}, failed: ${failed}`,
+                    );
+                  }
+                  return Effect.void;
+                }),
+                Effect.catchAll(() => {
+                  failed++;
+                  processed++;
+                  return Effect.succeed({ localPath, r2Key, success: false, skipped: false });
+                }),
+              ),
+            { concurrency: config.concurrency },
+          ),
+          Stream.runDrain,
+        );
 
-          return { uploaded, skipped, failed, total: files.length };
-        });
+        return { uploaded, skipped, failed, total: files.length };
+      });
 
       const list = (prefix: string): Effect.Effect<readonly string[]> =>
         pipe(
-          Effect.gen(function* () {
+          Effect.fn("R2Service.list")(function* (_prefix: string) {
+            yield* Effect.annotateCurrentSpan("prefix", _prefix);
+
             const command = Command.make(
               "npx",
               "wrangler",
@@ -224,7 +232,7 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<R2Service, R2S
               "object",
               "list",
               config.r2BucketName,
-              `--prefix=${prefix}`,
+              `--prefix=${_prefix}`,
             );
 
             const result = yield* pipe(
@@ -243,6 +251,7 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<R2Service, R2S
                   }),
                 }),
               ),
+              Effect.scoped,
             );
 
             if (result.exitCode !== 0) {
@@ -258,8 +267,7 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<R2Service, R2S
             } catch {
               return [] as readonly string[];
             }
-          }),
-          Effect.scoped,
+          })(prefix),
           Effect.catchAll(() => Effect.succeed([] as readonly string[])),
         );
 

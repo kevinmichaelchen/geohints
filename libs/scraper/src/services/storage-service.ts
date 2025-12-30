@@ -94,214 +94,222 @@ export class StorageService extends Context.Tag("@geohints/StorageService")<
       const resolvePath = (relativePath: string): Effect.Effect<string> =>
         Effect.succeed(pathService.join(config.outputDir, relativePath));
 
-      const ensureDir = (relativePath: string): Effect.Effect<void, FsError> =>
-        Effect.gen(function* () {
-          const fullPath = yield* resolvePath(relativePath);
-          yield* pipe(
-            fs.makeDirectory(fullPath, { recursive: true }),
-            Effect.catchAll((error) =>
-              Effect.fail(
-                new FsError({
-                  path: fullPath,
-                  operation: "mkdir",
-                  message: String(error),
-                  cause: error,
-                }),
-              ),
+      const ensureDir = Effect.fn("StorageService.ensureDir")(function* (relativePath: string) {
+        yield* Effect.annotateCurrentSpan("path", relativePath);
+        const fullPath = yield* resolvePath(relativePath);
+        yield* pipe(
+          fs.makeDirectory(fullPath, { recursive: true }),
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new FsError({
+                path: fullPath,
+                operation: "mkdir",
+                message: String(error),
+                cause: error,
+              }),
             ),
-          );
-        });
+          ),
+        );
+      });
 
-      const exists = (relativePath: string): Effect.Effect<boolean, FsError> =>
-        Effect.gen(function* () {
-          const fullPath = yield* resolvePath(relativePath);
-          return yield* pipe(
-            fs.exists(fullPath),
-            Effect.catchAll((error) =>
-              Effect.fail(
-                new FsError({
-                  path: fullPath,
-                  operation: "read",
-                  message: String(error),
-                  cause: error,
-                }),
-              ),
+      const exists = Effect.fn("StorageService.exists")(function* (relativePath: string) {
+        yield* Effect.annotateCurrentSpan("path", relativePath);
+        const fullPath = yield* resolvePath(relativePath);
+        return yield* pipe(
+          fs.exists(fullPath),
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new FsError({
+                path: fullPath,
+                operation: "read",
+                message: String(error),
+                cause: error,
+              }),
             ),
-          );
-        });
+          ),
+        );
+      });
 
-      const saveImage = (relativePath: string, data: Uint8Array): Effect.Effect<void, FsError> =>
-        Effect.gen(function* () {
-          const fullPath = yield* resolvePath(relativePath);
-          const dir = pathService.dirname(fullPath);
+      const saveImage = Effect.fn("StorageService.saveImage")(function* (
+        relativePath: string,
+        data: Uint8Array,
+      ) {
+        yield* Effect.annotateCurrentSpan("path", relativePath);
+        yield* Effect.annotateCurrentSpan("size", data.length);
+        const fullPath = yield* resolvePath(relativePath);
+        const dir = pathService.dirname(fullPath);
 
-          // Ensure directory exists
-          yield* pipe(
-            fs.makeDirectory(dir, { recursive: true }),
-            Effect.catchAll((error) =>
-              Effect.fail(
-                new FsError({
-                  path: dir,
-                  operation: "mkdir",
-                  message: String(error),
-                  cause: error,
-                }),
-              ),
+        // Ensure directory exists
+        yield* pipe(
+          fs.makeDirectory(dir, { recursive: true }),
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new FsError({
+                path: dir,
+                operation: "mkdir",
+                message: String(error),
+                cause: error,
+              }),
             ),
-          );
+          ),
+        );
 
-          // Write file
-          yield* pipe(
-            fs.writeFile(fullPath, data),
-            Effect.catchAll((error) =>
-              Effect.fail(
-                new FsError({
-                  path: fullPath,
-                  operation: "write",
-                  message: String(error),
-                  cause: error,
-                }),
-              ),
+        // Write file
+        yield* pipe(
+          fs.writeFile(fullPath, data),
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new FsError({
+                path: fullPath,
+                operation: "write",
+                message: String(error),
+                cause: error,
+              }),
             ),
-          );
-        });
+          ),
+        );
+      });
 
-      const readManifest = (): Effect.Effect<Manifest, FsError | ParseError> =>
-        Effect.gen(function* () {
-          const fullPath = yield* resolvePath("manifest.json");
+      const readManifest = Effect.fn("StorageService.readManifest")(function* () {
+        const fullPath = yield* resolvePath("manifest.json");
+        yield* Effect.annotateCurrentSpan("path", fullPath);
 
-          const fileExists = yield* pipe(
-            fs.exists(fullPath),
-            Effect.catchAll(() => Effect.succeed(false)),
-          );
+        const fileExists = yield* pipe(
+          fs.exists(fullPath),
+          Effect.catchAll(() => Effect.succeed(false)),
+        );
 
-          if (!fileExists) {
-            return emptyManifest();
-          }
+        if (!fileExists) {
+          return emptyManifest();
+        }
 
-          const content = yield* pipe(
-            fs.readFileString(fullPath),
-            Effect.catchAll((error) =>
-              Effect.fail(
-                new FsError({
-                  path: fullPath,
-                  operation: "read",
-                  message: String(error),
-                  cause: error,
-                }),
-              ),
+        const content = yield* pipe(
+          fs.readFileString(fullPath),
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new FsError({
+                path: fullPath,
+                operation: "read",
+                message: String(error),
+                cause: error,
+              }),
             ),
-          );
+          ),
+        );
 
-          const json = yield* pipe(
-            Effect.try(() => JSON.parse(content)),
-            Effect.catchAll((error) =>
-              Effect.fail(
-                new ParseError({
-                  source: fullPath,
-                  message: "Invalid JSON",
-                  cause: error,
-                }),
-              ),
+        const json = yield* pipe(
+          Effect.try(() => JSON.parse(content)),
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new ParseError({
+                source: fullPath,
+                message: "Invalid JSON",
+                cause: error,
+              }),
             ),
-          );
+          ),
+        );
 
-          const manifest = yield* pipe(
-            Schema.decodeUnknown(Manifest)(json),
-            Effect.catchAll((error) =>
-              Effect.fail(
-                new ParseError({
-                  source: fullPath,
-                  message: "Invalid manifest schema",
-                  cause: error,
-                }),
-              ),
+        const manifest = yield* pipe(
+          Schema.decodeUnknown(Manifest)(json),
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new ParseError({
+                source: fullPath,
+                message: "Invalid manifest schema",
+                cause: error,
+              }),
             ),
-          );
+          ),
+        );
 
-          return manifest;
-        });
+        return manifest;
+      });
 
-      const writeManifest = (manifest: Manifest): Effect.Effect<void, FsError> =>
-        Effect.gen(function* () {
-          const fullPath = yield* resolvePath("manifest.json");
-          const dir = pathService.dirname(fullPath);
+      const writeManifest = Effect.fn("StorageService.writeManifest")(function* (
+        manifest: Manifest,
+      ) {
+        const fullPath = yield* resolvePath("manifest.json");
+        yield* Effect.annotateCurrentSpan("path", fullPath);
+        yield* Effect.annotateCurrentSpan("entryCount", manifest.entries.length);
+        const dir = pathService.dirname(fullPath);
 
-          // Ensure directory exists
-          yield* pipe(
-            fs.makeDirectory(dir, { recursive: true }),
-            Effect.catchAll((error) =>
-              Effect.fail(
-                new FsError({
-                  path: dir,
-                  operation: "mkdir",
-                  message: String(error),
-                  cause: error,
-                }),
-              ),
+        // Ensure directory exists
+        yield* pipe(
+          fs.makeDirectory(dir, { recursive: true }),
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new FsError({
+                path: dir,
+                operation: "mkdir",
+                message: String(error),
+                cause: error,
+              }),
             ),
-          );
+          ),
+        );
 
-          // Serialize manifest
-          const content = JSON.stringify(manifest, null, 2);
+        // Serialize manifest
+        const content = JSON.stringify(manifest, null, 2);
 
-          // Write file
-          yield* pipe(
-            fs.writeFileString(fullPath, content),
-            Effect.catchAll((error) =>
-              Effect.fail(
-                new FsError({
-                  path: fullPath,
-                  operation: "write",
-                  message: String(error),
-                  cause: error,
-                }),
-              ),
+        // Write file
+        yield* pipe(
+          fs.writeFileString(fullPath, content),
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new FsError({
+                path: fullPath,
+                operation: "write",
+                message: String(error),
+                cause: error,
+              }),
             ),
-          );
-        });
+          ),
+        );
+      });
 
-      const hashContent = (data: Uint8Array): Effect.Effect<Sha256Hash> =>
-        Effect.gen(function* () {
-          // Use Web Crypto API (available in Node.js)
-          // Copy to a new ArrayBuffer to ensure compatibility
-          const buffer = new Uint8Array(data).buffer;
-          const hashBuffer = yield* Effect.promise(() =>
-            globalThis.crypto.subtle.digest("SHA-256", buffer),
-          );
-          const hashArray = new Uint8Array(hashBuffer);
-          const hashHex = Array.from(hashArray)
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
-          // Cast is safe because we know the hash is 64 hex characters
-          return hashHex as Sha256Hash;
-        });
+      const hashContent = Effect.fn("StorageService.hashContent")(function* (data: Uint8Array) {
+        yield* Effect.annotateCurrentSpan("size", data.length);
+        // Use Web Crypto API (available in Node.js)
+        // Copy to a new ArrayBuffer to ensure compatibility
+        const buffer = new Uint8Array(data).buffer;
+        const hashBuffer = yield* Effect.promise(() =>
+          globalThis.crypto.subtle.digest("SHA-256", buffer),
+        );
+        const hashArray = new Uint8Array(hashBuffer);
+        const hashHex = Array.from(hashArray)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        // Cast is safe because we know the hash is 64 hex characters
+        return hashHex as Sha256Hash;
+      });
 
-      const saveProcessedImage = (
+      const saveProcessedImage = Effect.fn("StorageService.saveProcessedImage")(function* (
         basePath: string,
         hash: string,
         processed: ProcessedImage,
-      ): Effect.Effect<{ original: string; variants: Record<string, string> }, FsError> =>
-        Effect.gen(function* () {
-          const shortHash = hash.slice(0, 8);
+      ) {
+        yield* Effect.annotateCurrentSpan("basePath", basePath);
+        yield* Effect.annotateCurrentSpan("hash", hash);
+        const shortHash = hash.slice(0, 8);
 
-          // Ensure directory exists
-          yield* ensureDir(basePath);
+        // Ensure directory exists
+        yield* ensureDir(basePath);
 
-          // Save original
-          const originalPath = `${basePath}/${shortHash}-original.webp`;
-          yield* saveImage(originalPath, processed.original);
+        // Save original
+        const originalPath = `${basePath}/${shortHash}-original.webp`;
+        yield* saveImage(originalPath, processed.original);
 
-          // Save variants
-          const variants: Record<string, string> = {};
-          for (const [size, data] of Object.entries(processed.variants)) {
-            const variantPath = `${basePath}/${shortHash}-${size}.webp`;
-            yield* saveImage(variantPath, data);
-            variants[size] = variantPath;
-          }
+        // Save variants
+        const variants: Record<string, string> = {};
+        for (const [size, data] of Object.entries(processed.variants)) {
+          const variantPath = `${basePath}/${shortHash}-${size}.webp`;
+          yield* saveImage(variantPath, data);
+          variants[size] = variantPath;
+        }
 
-          return { original: originalPath, variants };
-        });
+        return { original: originalPath, variants };
+      });
 
       return {
         saveImage,

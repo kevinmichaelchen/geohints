@@ -100,6 +100,9 @@ export class HttpService extends Context.Tag("@geohints/HttpService")<
         ) => Effect.Effect<A, HttpClientError.ResponseError>,
       ): Effect.Effect<A, HttpServiceError> =>
         Effect.gen(function* () {
+          yield* Effect.annotateCurrentSpan("url", url);
+          yield* Effect.annotateCurrentSpan("accept", accept);
+
           // Rate limit: delay before request
           yield* Effect.sleep(Duration.millis(config.requestDelayMs));
 
@@ -147,13 +150,21 @@ export class HttpService extends Context.Tag("@geohints/HttpService")<
           Effect.catchAll((error) => Effect.fail(error)),
         );
 
-      const fetchHtml = (url: string): Effect.Effect<string, HttpServiceError> =>
-        fetchWithRetry(url, "text/html,application/xhtml+xml", (response) => response.text);
+      const fetchHtml = Effect.fn("HttpService.fetchHtml")(function* (url: string) {
+        yield* Effect.annotateCurrentSpan("url", url);
+        return yield* fetchWithRetry(
+          url,
+          "text/html,application/xhtml+xml",
+          (response) => response.text,
+        );
+      });
 
-      const fetchImage = (url: string): Effect.Effect<Uint8Array, HttpServiceError> =>
-        fetchWithRetry(url, "image/*", (response) =>
+      const fetchImage = Effect.fn("HttpService.fetchImage")(function* (url: string) {
+        yield* Effect.annotateCurrentSpan("url", url);
+        return yield* fetchWithRetry(url, "image/*", (response) =>
           response.arrayBuffer.pipe(Effect.map((buffer) => new Uint8Array(buffer as ArrayBuffer))),
         );
+      });
 
       const fetchMany = <A, E>(
         urls: readonly string[],
