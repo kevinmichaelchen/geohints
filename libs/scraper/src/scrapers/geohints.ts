@@ -383,13 +383,22 @@ export const scrapeGeohints = Effect.fn("Geohints.scrape")(function* (category: 
   );
   const existingHashes = new Set(existingManifest.entries.map((e: ManifestEntry) => e.contentHash));
 
+  // Progress tracking
+  const totalImages = images.length;
+  const logInterval = Math.max(5, Math.floor(totalImages / 20)); // Log every 5% or 5 images
+  let processed = 0;
+  let succeeded = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  yield* Effect.log(`Processing ${totalImages} images...`);
+
   // Stream process all images
   const entries = yield* Stream.fromIterable(images).pipe(
     Stream.zipWithIndex,
     Stream.mapEffect(
       ([image, index]) =>
         processGeohintImage(category, image, index).pipe(
-          Effect.tap((entry) => Effect.log(`Processed: ${entry.country} - ${entry.id}`)),
           // Skip if already exists (deduplication)
           Effect.filterOrFail(
             (entry) => !existingHashes.has(entry.contentHash),
@@ -399,13 +408,34 @@ export const scrapeGeohints = Effect.fn("Geohints.scrape")(function* (category: 
                 message: "Duplicate image (already in manifest)",
               }),
           ),
+          Effect.tap(() => {
+            succeeded++;
+            return Effect.void;
+          }),
           // Catch individual errors and continue
           Effect.catchAll((error) =>
             Effect.gen(function* () {
-              yield* Effect.logWarning(`Skipping ${image.imageUrl}: ${error._tag}`);
+              if (error._tag === "ParseError" && error.message.includes("Duplicate")) {
+                skipped++;
+              } else {
+                failed++;
+                yield* Effect.logWarning(`Skipping ${image.imageUrl}: ${error._tag}`);
+              }
               return null as ManifestEntry | null;
             }),
           ),
+          // Log progress periodically
+          Effect.tap(() => {
+            processed++;
+            if (processed % logInterval === 0 || processed === totalImages) {
+              const pct = Math.round((processed / totalImages) * 100);
+              return Effect.log(
+                `Progress: ${processed}/${totalImages} (${pct}%) - ` +
+                  `new: ${succeeded}, skipped: ${skipped}, failed: ${failed}`,
+              );
+            }
+            return Effect.void;
+          }),
         ),
       { concurrency: config.concurrency },
     ),
@@ -414,7 +444,11 @@ export const scrapeGeohints = Effect.fn("Geohints.scrape")(function* (category: 
   );
 
   yield* Effect.annotateCurrentSpan("entriesScraped", Chunk.size(entries));
-  yield* Effect.log(`Scraped ${Chunk.size(entries)} new images`);
+  yield* Effect.annotateCurrentSpan("skipped", skipped);
+  yield* Effect.annotateCurrentSpan("failed", failed);
+  yield* Effect.log(
+    `Completed: ${Chunk.size(entries)} new images scraped, ${skipped} skipped, ${failed} failed`,
+  );
 
   return entries;
 });
@@ -430,14 +464,32 @@ export const scrapeAllGeohints = Effect.fn("Geohints.scrapeAll")(function* () {
 
   yield* Effect.log(`Scraping ${GEOHINTS_CATEGORIES.length} categories from geohints.com...`);
 
+  // Track progress across categories
+  const total = GEOHINTS_CATEGORIES.length;
+  let completed = 0;
+  let categoryFailed = 0;
+
   // Process each category sequentially to avoid overwhelming the server
   const allEntries = yield* Effect.forEach(
     GEOHINTS_CATEGORIES,
     (category) =>
       scrapeGeohints(category).pipe(
+        Effect.tap((entries) =>
+          Effect.gen(function* () {
+            completed++;
+            yield* Effect.log(
+              `Category progress: ${completed}/${total} (${Math.round((completed / total) * 100)}%) - ` +
+                `completed: ${category} with ${Chunk.size(entries)} new images`,
+            );
+          }),
+        ),
         Effect.catchAll((error) =>
           Effect.gen(function* () {
-            yield* Effect.logWarning(`Failed to scrape ${category}: ${error._tag}`);
+            completed++;
+            categoryFailed++;
+            yield* Effect.logWarning(
+              `Category progress: ${completed}/${total} - failed: ${category} (${error._tag})`,
+            );
             return Chunk.empty<ManifestEntry>();
           }),
         ),
@@ -467,7 +519,12 @@ export const scrapeAllGeohints = Effect.fn("Geohints.scrapeAll")(function* () {
   yield* storage.writeManifest(newManifest);
 
   yield* Effect.annotateCurrentSpan("totalEntries", newManifest.entries.length);
-  yield* Effect.log(`Manifest updated: ${newManifest.entries.length} total entries`);
+  yield* Effect.annotateCurrentSpan("newEntries", entries.length);
+  yield* Effect.annotateCurrentSpan("categoriesFailed", categoryFailed);
+  yield* Effect.log(
+    `Completed: ${entries.length} new images from ${total - categoryFailed} categories, ` +
+      `${categoryFailed} categories failed, ${newManifest.entries.length} total entries`,
+  );
 
   return newManifest;
 });
