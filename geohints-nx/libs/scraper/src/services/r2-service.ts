@@ -174,19 +174,19 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<
           let uploaded = 0
           let skipped = 0
           let failed = 0
+          let processed = 0
+          const total = files.length
+          const logInterval = Math.max(10, Math.floor(total / 20)) // Log every 5% or 10 files
+
+          yield* Effect.log(`Starting upload of ${total} files...`)
 
           yield* Stream.fromIterable(files).pipe(
             Stream.mapEffect(
               ({ localPath, r2Key }) =>
                 pipe(
                   Effect.gen(function* () {
-                    // Check if already uploaded
-                    const alreadyExists = yield* exists(r2Key)
-                    if (alreadyExists) {
-                      skipped++
-                      return { localPath, r2Key, success: true, skipped: true }
-                    }
-
+                    // Skip existence check for speed - just upload and let R2 overwrite
+                    // This is much faster than 2 wrangler calls per file
                     const result = yield* upload(localPath, r2Key)
                     if (result.success) {
                       uploaded++
@@ -195,8 +195,20 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<
                     }
                     return { ...result, skipped: false }
                   }),
+                  Effect.tap(() => {
+                    processed++
+                    // Log progress periodically
+                    if (processed % logInterval === 0 || processed === total) {
+                      return Effect.log(
+                        `Progress: ${processed}/${total} (${Math.round(processed / total * 100)}%) - ` +
+                        `uploaded: ${uploaded}, failed: ${failed}`
+                      )
+                    }
+                    return Effect.void
+                  }),
                   Effect.catchAll(() => {
                     failed++
+                    processed++
                     return Effect.succeed({ localPath, r2Key, success: false, skipped: false })
                   })
                 ),

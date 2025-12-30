@@ -84,12 +84,14 @@ interface GeohintImage {
 
 /**
  * Extract country code from country name using common mappings.
+ * ISO 3166-1 alpha-2 codes.
  */
 const extractCountryCode = (countryName: string): string => {
   const name = countryName.toLowerCase().trim()
 
-  // Common country name to code mappings
+  // Comprehensive country name to ISO alpha-2 code mappings
   const mappings: Record<string, string> = {
+    // Special cases and common variations
     "united states": "US",
     "usa": "US",
     "united kingdom": "GB",
@@ -102,6 +104,75 @@ const extractCountryCode = (countryName: string): string => {
     "czechia": "CZ",
     "uae": "AE",
     "united arab emirates": "AE",
+    "cocos (keeling) islands": "CC",
+    "costa rica": "CR",
+
+    // Countries where first 2 chars don't match ISO code
+    "botswana": "BW",
+    "bulgaria": "BG",
+    "ireland": "IE",
+    "israel": "IL",
+    "japan": "JP",
+    "jordan": "JO",
+    "kenya": "KE",
+    "malaysia": "MY",
+    "mongolia": "MN",
+    "montenegro": "ME",
+    "nigeria": "NG",
+    "norway": "NO",
+    "palestine": "PS",
+    "philippines": "PH",
+    "russia": "RU",
+    "spain": "ES",
+    "tunisia": "TN",
+    "canada": "CA",
+    "denmark": "DK",
+    "italy": "IT",
+
+    // Additional common countries
+    "germany": "DE",
+    "france": "FR",
+    "brazil": "BR",
+    "china": "CN",
+    "india": "IN",
+    "indonesia": "ID",
+    "mexico": "MX",
+    "netherlands": "NL",
+    "poland": "PL",
+    "portugal": "PT",
+    "sweden": "SE",
+    "switzerland": "CH",
+    "thailand": "TH",
+    "turkey": "TR",
+    "ukraine": "UA",
+    "vietnam": "VN",
+    "argentina": "AR",
+    "australia": "AU",
+    "austria": "AT",
+    "belgium": "BE",
+    "chile": "CL",
+    "colombia": "CO",
+    "croatia": "HR",
+    "egypt": "EG",
+    "finland": "FI",
+    "greece": "GR",
+    "hungary": "HU",
+    "iceland": "IS",
+    "latvia": "LV",
+    "lithuania": "LT",
+    "luxembourg": "LU",
+    "morocco": "MA",
+    "pakistan": "PK",
+    "peru": "PE",
+    "romania": "RO",
+    "serbia": "RS",
+    "singapore": "SG",
+    "slovakia": "SK",
+    "slovenia": "SI",
+    "taiwan": "TW",
+    "uganda": "UG",
+    "uruguay": "UY",
+    "venezuela": "VE",
   }
 
   if (mappings[name]) {
@@ -115,6 +186,12 @@ const extractCountryCode = (countryName: string): string => {
 /**
  * Parse image data from geohints HTML.
  * Geohints uses a flat structure with images referencing their CDN.
+ *
+ * For follow-cars, the HTML structure is:
+ * <div class="text-white text-md p-2">
+ *   <span class="font-bold"> Kenya</span>
+ *   <img src="..." />
+ * </div>
  */
 const parseGeohintImages = (
   html: string,
@@ -143,9 +220,17 @@ const parseGeohintImages = (
 
         // Look for nearby text that might indicate country
         const parentText = $img.parent().text().trim()
+
+        // For follow-cars (and similar patterns), look for sibling span.font-bold
+        // HTML structure: <div><span class="font-bold"> Kenya</span><img/></div>
+        const siblingSpan = $img.siblings("span.font-bold").first().text().trim()
+        const prevSiblingSpan = $img.prev("span.font-bold").text().trim()
+        const parentSpan = $img.parent().find("span.font-bold").first().text().trim()
+
         const headerText = $img.closest("section, div").find("h2, h3, h4").first().text().trim()
 
-        const countryName = headerText || country
+        // Priority: sibling span > parent span > header > filename
+        const countryName = siblingSpan || prevSiblingSpan || parentSpan || headerText || country
         const countryCode = extractCountryCode(countryName)
 
         images.push({
