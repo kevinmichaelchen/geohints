@@ -1,5 +1,6 @@
 {
-  "buildCommand": "pnpm install && pnpm build",
+  "framework": null,
+  "buildCommand": "pnpm build",
   "outputDirectory": "apps/web/.vercel/output",
   "installCommand": "pnpm install",
   "headers": [
