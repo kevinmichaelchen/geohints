@@ -54,11 +54,12 @@ export default component$(() => {
           <button
             type="button"
             class={[
-              "px-4 py-2 rounded-full text-sm font-medium transition-colors",
+              "px-4 py-2 rounded-sm text-sm transition-colors border",
               selectedContinent.value === null
-                ? "bg-qwik-blue-400 text-white"
-                : "bg-qwik-dirty-black/60 text-gray-300 hover:bg-qwik-dirty-black",
+                ? "bg-burnt-sienna text-parchment-light border-burnt-sienna font-semibold"
+                : "bg-parchment-light text-ink border-burnt-sienna/30 hover:border-burnt-sienna/60 hover:bg-parchment",
             ]}
+            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
             onClick$={() => (selectedContinent.value = null)}
           >
             All ({bollardCountries.length})
@@ -70,11 +71,12 @@ export default component$(() => {
                 key={continent}
                 type="button"
                 class={[
-                  "px-4 py-2 rounded-full text-sm font-medium transition-colors",
+                  "px-4 py-2 rounded-sm text-sm transition-colors border",
                   selectedContinent.value === continent
-                    ? "bg-qwik-blue-400 text-white"
-                    : "bg-qwik-dirty-black/60 text-gray-300 hover:bg-qwik-dirty-black",
+                    ? "bg-burnt-sienna text-parchment-light border-burnt-sienna font-semibold"
+                    : "bg-parchment-light text-ink border-burnt-sienna/30 hover:border-burnt-sienna/60 hover:bg-parchment",
                 ]}
+                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                 onClick$={() => (selectedContinent.value = continent)}
               >
                 {continent} ({count})
@@ -96,7 +98,10 @@ export default component$(() => {
             return (
               <section key={continent} style={sectionStyle}>
                 {/* Continent header */}
-                <h2 class="text-xl md:text-2xl font-bold text-qwik-blue-400 mb-6 border-b border-qwik-dirty-black/40 pb-2">
+                <h2
+                  class="text-xl md:text-2xl font-bold text-burnt-sienna mb-6 border-b border-burnt-sienna/20 pb-2"
+                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                >
                   {continent}
                 </h2>
 
@@ -111,10 +116,16 @@ export default component$(() => {
                       >
                         <span class="text-3xl">{getFlagEmoji(country.code)}</span>
                         <div>
-                          <h3 class="text-lg md:text-xl font-semibold group-hover:text-qwik-blue-400 transition-colors">
+                          <h3
+                            class="text-lg md:text-xl font-semibold text-ink group-hover:text-burnt-sienna transition-colors"
+                            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                          >
                             {country.name}
                           </h3>
-                          <p class="text-gray-400 text-sm">
+                          <p
+                            class="text-ink-faded text-sm italic"
+                            style={{ fontFamily: "'Crimson Text', Georgia, serif" }}
+                          >
                             {country.images.length} image
                             {country.images.length !== 1 ? "s" : ""} →
                           </p>
@@ -134,13 +145,13 @@ export default component$(() => {
                           return (
                             <div
                               key={seq}
-                              class="group relative rounded-lg overflow-hidden bg-qwik-dirty-black/60"
+                              class="group relative rounded-sm overflow-hidden bg-parchment-light border border-burnt-sienna/15 shadow-sm hover:shadow-md transition-shadow"
                               style={imageStyle}
                             >
-                              {/* Gradient border on hover */}
+                              {/* Vintage border on hover */}
                               <div
-                                class="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
-                                style="background: linear-gradient(135deg, rgba(24,182,246,0.4), rgba(172,127,244,0.4)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; padding: 1px;"
+                                class="absolute inset-0 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
+                                style="background: linear-gradient(135deg, rgba(184,134,11,0.4), rgba(139,69,19,0.4)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; padding: 1px;"
                                 aria-hidden="true"
                               />
 
@@ -153,12 +164,13 @@ export default component$(() => {
                                   height={250}
                                   alt={`Bollard from ${country.name} - Example ${i + 1}`}
                                   class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                                  style={{ filter: "sepia(0.1)" }}
                                   loading="lazy"
                                   decoding="async"
                                 />
 
                                 {/* Image number badge */}
-                                <div class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded text-xs text-gray-300 font-medium">
+                                <div class="absolute bottom-2 right-2 bg-parchment/80 backdrop-blur-sm px-2 py-0.5 rounded-sm text-xs text-ink-faded font-medium border border-burnt-sienna/20">
                                   {i + 1}/{country.images.length}
                                 </div>
                               </div>
