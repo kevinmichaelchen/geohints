@@ -12,6 +12,10 @@ interface RegionCardProps {
 
 export const RegionCard = component$<RegionCardProps>(
   ({ title, description, href, countries, index = 0 }) => {
+    // Slight rotation for organic feel
+    const rotations = [-0.8, 0.5, -0.3, 0.7, -0.5, 0.3];
+    const rotation = rotations[index % rotations.length];
+
     const entranceStyle = useEntranceAnimation(index, {
       baseDelay: 0.1,
       stagger: 0.05,
@@ -21,48 +25,109 @@ export const RegionCard = component$<RegionCardProps>(
     return (
       <Link
         href={href}
-        class="group relative block rounded-xl overflow-hidden bg-qwik-dirty-black transition-all duration-300 ease-out hover:scale-[1.02] hover:-translate-y-1 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-qwik-dark-blue/20"
+        class="group relative block overflow-hidden transition-all duration-300 ease-out hover:scale-[1.01] hover:-translate-y-1"
         style={entranceStyle}
       >
-        {/* Gradient border on hover */}
+        {/* Vintage card styling */}
         <div
-          class="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
-          style="background: linear-gradient(135deg, rgba(24,182,246,0.5), rgba(172,127,244,0.5)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; padding: 1px;"
-          aria-hidden="true"
-        />
+          class="bg-parchment-light rounded-sm p-1 transition-shadow duration-300"
+          style={{
+            transform: `rotate(${rotation}deg)`,
+            boxShadow: "0 4px 16px rgba(139, 69, 19, 0.12), 0 2px 6px rgba(0,0,0,0.08)",
+            border: "1px solid rgba(139, 69, 19, 0.15)",
+          }}
+        >
+          {/* Inner content area */}
+          <div
+            class="p-5 md:p-6"
+            style={{
+              background:
+                "linear-gradient(135deg, var(--color-parchment-light) 0%, var(--color-parchment) 100%)",
+              borderRadius: "2px",
+            }}
+          >
+            {/* Globe icon */}
+            <div class="mb-4 opacity-60 group-hover:opacity-100 transition-opacity">
+              <svg width="36" height="36" viewBox="0 0 100 100" class="text-teal">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="2" />
+                <ellipse
+                  cx="50"
+                  cy="50"
+                  rx="40"
+                  ry="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  opacity="0.6"
+                />
+                <ellipse
+                  cx="50"
+                  cy="50"
+                  rx="18"
+                  ry="40"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  opacity="0.6"
+                />
+                <line
+                  x1="10"
+                  y1="50"
+                  x2="90"
+                  y2="50"
+                  stroke="currentColor"
+                  stroke-width="1"
+                  opacity="0.4"
+                />
+              </svg>
+            </div>
 
-        {/* Card content */}
-        <div class="p-6 md:p-8">
-          {/* Icon/visual element */}
-          <div class="mb-4 text-4xl opacity-80 group-hover:opacity-100 transition-opacity">🌍</div>
+            {/* Title */}
+            <h3
+              class="text-xl md:text-2xl font-bold mb-2 text-ink group-hover:text-burnt-sienna transition-colors duration-200"
+              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            >
+              {title}
+            </h3>
 
-          {/* Title */}
-          <h3 class="text-xl md:text-2xl font-semibold mb-2 group-hover:text-qwik-light-blue transition-colors duration-200">
-            {title}
-          </h3>
+            {/* Description */}
+            <p
+              class="text-ink-faded text-sm mb-4 leading-relaxed italic"
+              style={{ fontFamily: "'Crimson Text', Georgia, serif" }}
+            >
+              {description}
+            </p>
 
-          {/* Description */}
-          <p class="text-gray-400 text-sm mb-4 leading-relaxed">{description}</p>
-
-          {/* Country flags */}
-          <div class="flex flex-wrap gap-2">
-            {countries.map((flag, i) => (
-              <span
-                key={i}
-                class="text-2xl opacity-70 group-hover:opacity-100 transition-opacity"
-                style={{ transitionDelay: `${i * 30}ms` }}
-              >
-                {flag}
-              </span>
-            ))}
+            {/* Country flags */}
+            <div class="flex flex-wrap gap-2 pt-2 border-t border-burnt-sienna/10">
+              {countries.map((flag, i) => (
+                <span
+                  key={i}
+                  class="text-2xl opacity-70 group-hover:opacity-100 transition-opacity"
+                  style={{ transitionDelay: `${i * 30}ms` }}
+                >
+                  {flag}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Bottom accent line */}
-        <div
-          class="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-qwik-light-blue/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          aria-hidden="true"
-        />
+          {/* Corner accents */}
+          <div
+            class="absolute top-0 left-0 w-5 h-5 opacity-20 group-hover:opacity-40 transition-opacity"
+            style={{
+              background: "linear-gradient(135deg, var(--color-antique-gold) 50%, transparent 50%)",
+            }}
+            aria-hidden="true"
+          />
+          <div
+            class="absolute bottom-0 right-0 w-5 h-5 opacity-20 group-hover:opacity-40 transition-opacity"
+            style={{
+              background: "linear-gradient(-45deg, var(--color-antique-gold) 50%, transparent 50%)",
+            }}
+            aria-hidden="true"
+          />
+        </div>
       </Link>
     );
   },

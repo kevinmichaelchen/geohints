@@ -7,40 +7,83 @@ interface GeoHintsLogoProps {
 
 export const GeoHintsLogo = component$<GeoHintsLogoProps>(({ height = 40, width = 160 }) => {
   return (
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-3">
+      {/* Vintage compass/globe icon */}
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" height={height} width={height}>
-        <defs>
-          <linearGradient id="globe" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#18B6F6" />
-            <stop offset="100%" stop-color="#006ce9" />
-          </linearGradient>
-        </defs>
-        <circle cx="50" cy="50" r="45" fill="url(#globe)" />
+        {/* Outer ring with notches like old compass */}
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#8B4513" stroke-width="2" />
+        <circle cx="50" cy="50" r="42" fill="#FAF8F3" stroke="#8B4513" stroke-width="1" />
+
+        {/* Cardinal direction notches */}
+        <path
+          d="M50 4 L50 12 M50 88 L50 96 M4 50 L12 50 M88 50 L96 50"
+          stroke="#8B4513"
+          stroke-width="2"
+        />
+
+        {/* Globe lines */}
+        <circle
+          cx="50"
+          cy="50"
+          r="35"
+          fill="none"
+          stroke="#4A7C6F"
+          stroke-width="1.5"
+          opacity="0.8"
+        />
         <ellipse
           cx="50"
           cy="50"
-          rx="45"
-          ry="20"
+          rx="35"
+          ry="15"
           fill="none"
-          stroke="#fff"
-          stroke-width="2"
+          stroke="#4A7C6F"
+          stroke-width="1"
           opacity="0.6"
         />
         <ellipse
           cx="50"
           cy="50"
-          rx="20"
-          ry="45"
+          rx="15"
+          ry="35"
           fill="none"
-          stroke="#fff"
-          stroke-width="2"
+          stroke="#4A7C6F"
+          stroke-width="1"
           opacity="0.6"
         />
-        <line x1="5" y1="50" x2="95" y2="50" stroke="#fff" stroke-width="2" opacity="0.6" />
-        <circle cx="65" cy="30" r="8" fill="#AC7EF4" />
-        <circle cx="65" cy="30" r="4" fill="#fff" />
+
+        {/* Equator and prime meridian */}
+        <line x1="15" y1="50" x2="85" y2="50" stroke="#8B4513" stroke-width="0.75" opacity="0.5" />
+        <line x1="50" y1="15" x2="50" y2="85" stroke="#8B4513" stroke-width="0.75" opacity="0.5" />
+
+        {/* Location pin marker */}
+        <g transform="translate(60, 32)">
+          <path
+            d="M0 0 C-6 -12 -12 -18 0 -24 C12 -18 6 -12 0 0 Z"
+            fill="#B8860B"
+            stroke="#8B4513"
+            stroke-width="1"
+          />
+          <circle cx="0" cy="-16" r="4" fill="#FAF8F3" />
+        </g>
+
+        {/* Decorative corner flourishes */}
+        <path d="M20 20 Q25 15 30 20" fill="none" stroke="#8B4513" stroke-width="1" opacity="0.4" />
+        <path d="M80 20 Q75 15 70 20" fill="none" stroke="#8B4513" stroke-width="1" opacity="0.4" />
+        <path d="M20 80 Q25 85 30 80" fill="none" stroke="#8B4513" stroke-width="1" opacity="0.4" />
+        <path d="M80 80 Q75 85 70 80" fill="none" stroke="#8B4513" stroke-width="1" opacity="0.4" />
       </svg>
-      <span class="font-bold text-xl" style={{ color: "#006ce9", width: width - height - 8 }}>
+
+      {/* Text in vintage serif */}
+      <span
+        class="font-bold"
+        style={{
+          color: "#8B4513",
+          fontFamily: "'Libre Baskerville', Georgia, serif",
+          fontSize: `${height * 0.5}px`,
+          letterSpacing: "-0.02em",
+        }}
+      >
         GeoHints
       </span>
     </div>

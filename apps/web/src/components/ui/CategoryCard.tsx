@@ -14,93 +14,133 @@ interface CategoryCardProps {
 
 export const CategoryCard = component$<CategoryCardProps>(
   ({ title, description, href, imageSrc, comingSoon = false, index = 0 }) => {
-    const baseClasses =
-      "group relative block rounded-xl overflow-hidden bg-qwik-dirty-black transition-all duration-300 ease-out";
+    // Slight rotation for organic "scattered on desk" feel
+    const rotations = [-1.5, 0.8, -0.5, 1.2, -1, 0.5, -0.8, 1.5, -1.2, 0.3];
+    const rotation = rotations[index % rotations.length];
+
+    const baseClasses = "group relative block overflow-hidden transition-all duration-300 ease-out";
     const interactiveClasses = comingSoon
-      ? "opacity-60 cursor-not-allowed"
-      : "hover:scale-[1.02] hover:-translate-y-1";
+      ? "opacity-70 cursor-not-allowed"
+      : "hover:scale-[1.02] hover:-translate-y-2";
 
     // Entrance animation (only on initial load, instant on SPA nav)
     const entranceStyle = useEntranceAnimation(index, {
-      baseDelay: 0.1,
-      stagger: 0.05,
-      duration: 0.4,
+      baseDelay: 0.15,
+      stagger: 0.06,
+      duration: 0.5,
     });
 
     const content = (
       <>
-        {/* Gradient border - using pseudo-element style via outline */}
-        {!comingSoon && (
-          <div
-            class="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
-            style="background: linear-gradient(135deg, rgba(24,182,246,0.5), rgba(172,127,244,0.5)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; padding: 1px;"
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Image container */}
-        <div class="aspect-video relative overflow-hidden">
-          <Image
-            src={imageSrc}
-            alt={title}
-            layout="constrained"
-            width={400}
-            height={225}
-            class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-          />
-          {/* Image overlay gradient */}
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-qwik-dirty-black/60 via-transparent to-transparent"
-            aria-hidden="true"
-          />
-          {comingSoon && (
-            <div class="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
-              <span class="bg-qwik-light-purple/90 px-4 py-1.5 rounded-full text-sm font-medium shadow-lg animate-glow-pulse">
-                Coming Soon
-              </span>
+        {/* Vintage photo frame / postcard styling */}
+        <div
+          class="bg-parchment-light rounded-sm shadow-lg transition-shadow duration-300"
+          style={{
+            transform: `rotate(${rotation}deg)`,
+            boxShadow: "0 4px 20px rgba(139, 69, 19, 0.15), 0 2px 8px rgba(0,0,0,0.1)",
+          }}
+        >
+          {/* Inner border like old photo mount */}
+          <div class="p-2 md:p-3">
+            {/* Image container with vintage photo border */}
+            <div
+              class="relative overflow-hidden"
+              style={{
+                border: "1px solid rgba(139, 69, 19, 0.2)",
+                boxShadow: "inset 0 2px 8px rgba(139, 69, 19, 0.1)",
+              }}
+            >
+              <Image
+                src={imageSrc}
+                alt={title}
+                layout="constrained"
+                width={400}
+                height={225}
+                class="object-cover w-full aspect-video transition-all duration-500 group-hover:scale-105"
+                style={{
+                  filter: comingSoon ? "sepia(0.3) brightness(0.9)" : "sepia(0.1)",
+                }}
+              />
+              {/* Vintage photo overlay - subtle aging effect */}
+              <div
+                class="absolute inset-0 pointer-events-none mix-blend-multiply opacity-20"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, transparent 50%, rgba(139, 69, 19, 0.15) 100%)",
+                }}
+                aria-hidden="true"
+              />
+              {comingSoon && (
+                <div class="absolute inset-0 flex items-center justify-center bg-parchment/70">
+                  <span
+                    class="px-4 py-1.5 text-sm font-medium text-burnt-sienna border-2 border-burnt-sienna rounded-sm uppercase tracking-wider"
+                    style={{
+                      transform: "rotate(-5deg)",
+                      fontFamily: "'Libre Baskerville', Georgia, serif",
+                    }}
+                  >
+                    Coming Soon
+                  </span>
+                </div>
+              )}
             </div>
+
+            {/* Content - styled like journal entry */}
+            <div class="pt-3 pb-1">
+              <h3
+                class="text-lg font-bold mb-1 text-ink group-hover:text-burnt-sienna transition-colors duration-200"
+                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              >
+                {title}
+              </h3>
+              <p
+                class="text-ink-faded text-sm leading-relaxed italic"
+                style={{ fontFamily: "'Crimson Text', Georgia, serif" }}
+              >
+                {description}
+              </p>
+            </div>
+          </div>
+
+          {/* Corner accent - like vintage photo corner */}
+          {!comingSoon && (
+            <>
+              <div
+                class="absolute top-0 left-0 w-6 h-6 opacity-30 group-hover:opacity-50 transition-opacity"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--color-antique-gold) 50%, transparent 50%)",
+                }}
+                aria-hidden="true"
+              />
+              <div
+                class="absolute bottom-0 right-0 w-6 h-6 opacity-30 group-hover:opacity-50 transition-opacity"
+                style={{
+                  background:
+                    "linear-gradient(-45deg, var(--color-antique-gold) 50%, transparent 50%)",
+                }}
+                aria-hidden="true"
+              />
+            </>
           )}
         </div>
-
-        {/* Content */}
-        <div class="p-5">
-          <h3 class="text-xl font-semibold mb-2 group-hover:text-qwik-light-blue transition-colors duration-200">
-            {title}
-          </h3>
-          <p class="text-gray-400 text-sm leading-relaxed">{description}</p>
-        </div>
-
-        {/* Bottom glow effect on hover */}
-        {!comingSoon && (
-          <div
-            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-qwik-light-blue/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            aria-hidden="true"
-          />
-        )}
       </>
     );
 
-    const wrapperStyle = entranceStyle;
-
-    // Shadow classes for hover
-    const shadowClasses = comingSoon
-      ? ""
-      : "shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-qwik-dark-blue/20";
+    const wrapperStyle = {
+      ...entranceStyle,
+    };
 
     if (comingSoon) {
       return (
-        <div class={`${baseClasses} ${interactiveClasses} ${shadowClasses}`} style={wrapperStyle}>
+        <div class={`${baseClasses} ${interactiveClasses}`} style={wrapperStyle}>
           {content}
         </div>
       );
     }
 
     return (
-      <Link
-        href={href}
-        class={`${baseClasses} ${interactiveClasses} ${shadowClasses}`}
-        style={wrapperStyle}
-      >
+      <Link href={href} class={`${baseClasses} ${interactiveClasses}`} style={wrapperStyle}>
         {content}
       </Link>
     );

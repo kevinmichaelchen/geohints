@@ -1,44 +1,29 @@
 @import "tailwindcss";
 
-/* Poppins Font */
-@font-face {
-  font-family: "Poppins";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/poppins-400.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Poppins";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/fonts/poppins-500.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Poppins";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("/fonts/poppins-700.woff2") format("woff2");
-}
-
 @theme {
-  /* Colors */
-  --color-qwik-dark-blue: #006ce9;
-  --color-qwik-light-blue: #18b6f6;
-  --color-qwik-light-purple: #ac7ff4;
-  --color-qwik-dark-purple: #713fc2;
+  /* Vintage Cartography Palette */
+  --color-parchment: #f5f0e1;
+  --color-parchment-light: #faf8f3;
+  --color-parchment-dark: #e8dfd0;
+  --color-ink: #1a1a1a;
+  --color-ink-faded: #3d3d3d;
+  --color-burnt-sienna: #8b4513;
+  --color-burnt-sienna-light: #a0522d;
+  --color-teal: #4a7c6f;
+  --color-teal-dark: #3a5f54;
+  --color-antique-gold: #b8860b;
+  --color-antique-gold-light: #daa520;
+  --color-sepia: #704214;
+  --color-aged-paper: #e6dcc8;
+
+  /* Legacy colors (for gradual migration) */
   --color-qwik-dirty-black: #1d2033;
-  --color-qwik-dark-background: #151934;
-  --color-qwik-dark-text: #ffffff;
 
   /* Animation durations */
   --animate-fade-in-up: fade-in-up 0.6s ease-out forwards;
   --animate-fade-in: fade-in 0.5s ease-out forwards;
-  --animate-glow-pulse: glow-pulse 3s ease-in-out infinite;
+  --animate-stamp: stamp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  --animate-unfurl: unfurl 0.6s ease-out forwards;
 }
 
 /* Keyframe Animations */
@@ -62,13 +47,40 @@
   }
 }
 
-@keyframes glow-pulse {
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.5) rotate(-5deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.95) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes unfurl {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) rotateX(15deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+  }
+}
+
+/* Compass drift for decorative elements */
+@keyframes compass-drift {
   0%,
   100% {
-    filter: drop-shadow(0 0 12px rgba(24, 182, 246, 0.4));
+    transform: rotate(-3deg);
   }
   50% {
-    filter: drop-shadow(0 0 20px rgba(24, 182, 246, 0.6));
+    transform: rotate(3deg);
   }
 }
 
@@ -84,49 +96,81 @@
 }
 
 html {
-  line-height: 1;
+  line-height: 1.6;
   -webkit-text-size-adjust: 100%;
   -moz-tab-size: 4;
   -o-tab-size: 4;
   tab-size: 4;
-  font-family:
-    "Poppins",
-    "Poppins fallback",
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    Arial,
-    "Noto Sans",
-    sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji",
-    "Segoe UI Symbol",
-    "Noto Color Emoji";
+  /* Crimson Text for body - warm, readable serif */
+  font-family: "Crimson Text", "Libre Baskerville", Georgia, "Times New Roman", serif;
 }
 
 body {
   padding: 0;
   margin: 0;
   line-height: inherit;
-  /* Cartographic grid background */
-  background:
-    /* Horizontal grid lines */
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    /* Vertical grid lines */
-    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    /* Subtle radial depth */
-    radial-gradient(ellipse at 50% 0%, #1e2548 0%, var(--color-qwik-dark-background) 60%),
-    var(--color-qwik-dark-background);
-  background-size:
-    100% 80px,
-    80px 100%,
-    100% 100%,
-    100% 100%;
+  /* Aged parchment background with paper texture */
+  background-color: var(--color-parchment);
+  background-image:
+    /* Paper grain texture */
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"),
+    /* Aged vignette edges */
+    radial-gradient(ellipse at center, transparent 50%, rgba(139, 69, 19, 0.08) 100%),
+    /* Subtle latitude lines */
+    repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 79px,
+        rgba(139, 69, 19, 0.06) 79px,
+        rgba(139, 69, 19, 0.06) 80px
+      ),
+    /* Subtle longitude lines */
+    repeating-linear-gradient(
+        to right,
+        transparent,
+        transparent 79px,
+        rgba(139, 69, 19, 0.06) 79px,
+        rgba(139, 69, 19, 0.06) 80px
+      );
+  background-blend-mode: overlay, normal, normal, normal;
   background-attachment: fixed;
-  color: var(--color-qwik-dark-text);
+  color: var(--color-ink);
   min-height: 100vh;
+}
+
+/* Heading font - elegant display serif */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Selection styling */
+::selection {
+  background-color: rgba(184, 134, 11, 0.3);
+  color: var(--color-ink);
+}
+
+/* Scrollbar styling for vintage feel */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-parchment-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-burnt-sienna);
+  border-radius: 6px;
+  border: 2px solid var(--color-parchment-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-burnt-sienna-light);
 }

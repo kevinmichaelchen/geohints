@@ -173,17 +173,41 @@ export const CategoryGrid = component$(() => {
     : {};
 
   return (
-    <section class="@container container mx-auto px-4 py-12 md:py-16">
-      {/* Section heading with fade-in */}
-      <h2
-        class="text-2xl md:text-3xl font-semibold mb-10 text-center tracking-tight"
-        style={headingStyle}
-      >
-        Explore Hints
-      </h2>
+    <section class="@container container mx-auto px-4 py-12 md:py-20">
+      {/* Section heading with vintage ornament */}
+      <div class="text-center mb-12" style={headingStyle}>
+        {/* Decorative top ornament */}
+        <svg
+          width="120"
+          height="20"
+          viewBox="0 0 120 20"
+          class="mx-auto mb-4 text-burnt-sienna opacity-40"
+        >
+          <path d="M0,10 L40,10" stroke="currentColor" stroke-width="1" />
+          <path d="M80,10 L120,10" stroke="currentColor" stroke-width="1" />
+          <circle cx="60" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1" />
+          <circle cx="60" cy="10" r="2" fill="currentColor" />
+          <path d="M45,10 L52,6 L52,14 Z" fill="currentColor" opacity="0.5" />
+          <path d="M75,10 L68,6 L68,14 Z" fill="currentColor" opacity="0.5" />
+        </svg>
 
-      {/* Cards grid */}
-      <div class="grid grid-cols-1 @sm:grid-cols-2 @lg:grid-cols-3 gap-6 md:gap-8">
+        <h2
+          class="text-2xl md:text-3xl font-bold text-ink tracking-tight"
+          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+        >
+          Explorer's Compendium
+        </h2>
+
+        <p
+          class="text-ink-faded mt-2 italic"
+          style={{ fontFamily: "'Crimson Text', Georgia, serif" }}
+        >
+          A collection of visual guides for the discerning traveler
+        </p>
+      </div>
+
+      {/* Cards grid - slightly looser for "scattered papers" feel */}
+      <div class="grid grid-cols-1 @sm:grid-cols-2 @lg:grid-cols-3 gap-8 md:gap-10">
         {categories.map((cat, index) => (
           <CategoryCard key={cat.href} {...cat} index={index} />
         ))}
