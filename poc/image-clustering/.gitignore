@@ -1,0 +1,20 @@
+# Downloaded images from R2
+sample-images/
+
+# Generated output
+output/
+
+# Python virtual environment (uv creates .venv)
+.venv/
+
+# uv lock file (optional - can commit for reproducibility)
+# uv.lock
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.idea/
+.vscode/
