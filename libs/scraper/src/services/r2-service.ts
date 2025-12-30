@@ -259,14 +259,15 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<R2Service, R2S
             }
 
             // Parse JSON output from wrangler
-            try {
-              const parsed = JSON.parse(result.stdout);
-              return (parsed.objects ?? []).map(
-                (obj: { key: string }) => obj.key,
-              ) as readonly string[];
-            } catch {
-              return [] as readonly string[];
-            }
+            return yield* Effect.try({
+              try: () => {
+                const parsed = JSON.parse(result.stdout);
+                return (parsed.objects ?? []).map(
+                  (obj: { key: string }) => obj.key,
+                ) as readonly string[];
+              },
+              catch: () => [] as readonly string[],
+            });
           })(prefix),
           Effect.catchAll(() => Effect.succeed([] as readonly string[])),
         );
