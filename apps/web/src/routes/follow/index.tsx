@@ -1,5 +1,5 @@
-import { component$, useSignal, useComputed$ } from "@builder.io/qwik";
-import type { DocumentHead } from "@builder.io/qwik-city";
+import { component$, useComputed$ } from "@builder.io/qwik";
+import { type DocumentHead, useLocation, useNavigate } from "@builder.io/qwik-city";
 import { PageHeader } from "~/components/ui/PageHeader";
 import { TableOfContents, type TOCItem } from "~/components/ui/TableOfContents";
 import { useIsInitialLoad } from "~/lib/hooks";
@@ -21,7 +21,18 @@ const getFlagEmoji = (code: string) => {
 
 export default component$(() => {
   const isInitialLoad = useIsInitialLoad();
-  const selectedContinent = useSignal<string | null>(null);
+  const loc = useLocation();
+  const nav = useNavigate();
+
+  // Read continent filter from URL params
+  const selectedContinent = useComputed$(() => {
+    const param = loc.url.searchParams.get("continent");
+    // Validate that the continent exists
+    if (param && continents.includes(param)) {
+      return param;
+    }
+    return null;
+  });
 
   const filteredCountries = useComputed$(() => {
     if (!selectedContinent.value) return followCarCountries;
@@ -70,7 +81,7 @@ export default component$(() => {
                     : "bg-parchment-light text-ink border-burnt-sienna/30 hover:border-burnt-sienna/60 hover:bg-parchment",
                 ]}
                 style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
-                onClick$={() => (selectedContinent.value = null)}
+                onClick$={() => nav("/follow")}
               >
                 All ({followCarCountries.length})
               </button>
@@ -87,7 +98,7 @@ export default component$(() => {
                         : "bg-parchment-light text-ink border-burnt-sienna/30 hover:border-burnt-sienna/60 hover:bg-parchment",
                     ]}
                     style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
-                    onClick$={() => (selectedContinent.value = continent)}
+                    onClick$={() => nav(`/follow?continent=${encodeURIComponent(continent)}`)}
                   >
                     {continent} ({count})
                   </button>
