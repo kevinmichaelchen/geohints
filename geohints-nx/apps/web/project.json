@@ -1,0 +1,38 @@
+{
+  "name": "web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/web/src",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite --mode ssr",
+        "cwd": "apps/web"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "qwik build",
+        "cwd": "apps/web"
+      },
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/server"]
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "qwik build preview && vite preview --open",
+        "cwd": "apps/web"
+      },
+      "dependsOn": ["build"]
+    },
+    "build.types": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --incremental --noEmit",
+        "cwd": "apps/web"
+      }
+    }
+  }
+}

@@ -109,21 +109,24 @@ export default component$(() => {
                   <div class="space-y-10">
                     {countries.map((country, countryIndex) => (
                       <div key={country.code}>
-                        {/* Country header */}
-                        <div class="flex items-center gap-3 mb-4">
+                        {/* Country header - links to country detail page */}
+                        <a
+                          href={`/${country.code.toLowerCase()}`}
+                          class="flex items-center gap-3 mb-4 group hover:opacity-90 transition-opacity"
+                        >
                           <span class="text-3xl">
                             {getFlagEmoji(country.code)}
                           </span>
                           <div>
-                            <h3 class="text-lg md:text-xl font-semibold">
+                            <h3 class="text-lg md:text-xl font-semibold group-hover:text-qwik-blue-400 transition-colors">
                               {country.name}
                             </h3>
                             <p class="text-gray-400 text-sm">
                               {country.images.length} image
-                              {country.images.length !== 1 ? "s" : ""}
+                              {country.images.length !== 1 ? "s" : ""} →
                             </p>
                           </div>
-                        </div>
+                        </a>
 
                         {/* Image grid */}
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">

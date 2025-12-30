@@ -1,4 +1,7 @@
 {
+  "buildCommand": "cd geohints-nx && pnpm install && pnpm build",
+  "outputDirectory": "geohints-nx/apps/web/.vercel/output",
+  "installCommand": "cd geohints-nx && pnpm install",
   "headers": [
     {
       "source": "/build/(.*)",
