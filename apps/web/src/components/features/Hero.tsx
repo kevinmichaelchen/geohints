@@ -17,9 +17,9 @@ export const Hero = component$(() => {
     : {};
 
   return (
-    <section class="container mx-auto px-4 py-20 md:py-28 text-center">
+    <section class="container mx-auto px-4 py-12 md:py-16 text-center">
       {/* Logo with subtle glow animation */}
-      <div class="flex justify-center mb-10" style={logoStyle}>
+      <div class="flex justify-center mb-6" style={logoStyle}>
         <div class="animate-glow-pulse">
           <GeoHintsLogo height={80} width={320} />
         </div>
@@ -27,7 +27,7 @@ export const Hero = component$(() => {
 
       {/* Main heading with staggered fade-in */}
       <h1
-        class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 tracking-tight"
+        class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight"
         style={headingStyle}
       >
         Master{" "}
@@ -44,7 +44,7 @@ export const Hero = component$(() => {
 
       {/* Subtitle */}
       <p
-        class="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
+        class="text-base md:text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
         style={subtitleStyle}
       >
         Learn to identify countries by language characters, follow cars, road signs, and more.
