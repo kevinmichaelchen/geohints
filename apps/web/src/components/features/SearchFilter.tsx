@@ -14,7 +14,7 @@ export const SearchFilter = component$<SearchFilterProps>(
     return (
       <div class="flex flex-col sm:flex-row gap-4 mb-6">
         <div class="relative flex-1">
-          <LuSearch class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors duration-200 peer-focus:text-qwik-light-blue" />
+          <LuSearch class="absolute left-3 top-1/2 -translate-y-1/2 text-burnt-sienna/60 w-5 h-5 transition-colors duration-200 peer-focus:text-burnt-sienna" />
           <input
             type="text"
             data-search-input
@@ -29,7 +29,8 @@ export const SearchFilter = component$<SearchFilterProps>(
                 (e.target as HTMLInputElement).blur();
               }
             }}
-            class="peer w-full pl-10 pr-4 py-3 bg-qwik-dirty-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-qwik-light-blue focus:ring-2 focus:ring-qwik-light-blue/30 transition-all duration-200"
+            class="peer w-full pl-10 pr-4 py-3 bg-parchment-light border border-burnt-sienna/30 rounded-sm text-ink placeholder-ink-faded/60 focus:outline-none focus:border-burnt-sienna focus:ring-2 focus:ring-burnt-sienna/20 transition-all duration-200"
+            style={{ fontFamily: "'Crimson Text', Georgia, serif" }}
             aria-label="Search characters or countries"
           />
         </div>
@@ -44,11 +45,12 @@ export const SearchFilter = component$<SearchFilterProps>(
                 }}
                 aria-pressed={scriptFilter.value === option}
                 class={[
-                  "min-h-[44px] px-4 py-3 rounded-lg capitalize transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-qwik-light-blue/50",
+                  "min-h-[44px] px-4 py-3 rounded-sm capitalize transition-all duration-200 border focus:outline-none focus:ring-2 focus:ring-burnt-sienna/30",
                   scriptFilter.value === option
-                    ? "bg-qwik-light-blue text-white shadow-lg shadow-qwik-light-blue/20"
-                    : "bg-qwik-dirty-black text-gray-400 hover:text-white hover:bg-qwik-dirty-black/80",
+                    ? "bg-burnt-sienna text-parchment-light border-burnt-sienna font-semibold"
+                    : "bg-parchment-light text-ink border-burnt-sienna/30 hover:border-burnt-sienna/60 hover:bg-parchment",
                 ]}
+                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
               >
                 {option}
               </button>

@@ -9,7 +9,12 @@ export const ResultsCount = component$<ResultsCountProps>(({ showing, total }) =
   const isFiltered = showing !== total;
 
   return (
-    <p class="text-sm text-gray-400 mb-4" aria-live="polite" aria-atomic="true">
+    <p
+      class="text-sm text-ink-faded mb-4 italic"
+      style={{ fontFamily: "'Crimson Text', Georgia, serif" }}
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {isFiltered ? `Showing ${showing} of ${total} characters` : `${total} characters`}
     </p>
   );
