@@ -75,6 +75,53 @@ export class ImageService extends Context.Tag("@geohints/ImageService")<...>() {
 Download → Validate → Convert to WEBP → Generate srcset → Hash → Update manifest → Upload to R2
 ```
 
+### R2 Upload Service
+```typescript
+// libs/scraper/src/services/r2-service.ts
+export class R2Service extends Context.Tag("@geohints/R2Service")<...>() {
+  upload: (localPath: string, r2Key: string) => Effect.Effect<UploadResult>
+  exists: (r2Key: string) => Effect.Effect<boolean>
+  uploadMany: (files: readonly { localPath: string; r2Key: string }[]) => Effect.Effect<UploadStats>
+}
+```
+
+## R2 Upload Requirements
+
+### Bucket Configuration
+- **Bucket Name**: `geohints-images`
+- **Public URL**: `https://pub-3d7bacd76def438caae68643612e60f9.r2.dev`
+
+### R2 Key Structure
+```
+{category}/{country_code}/{hash}-{width}w.webp
+```
+Example: `bollards/at/abc123-800w.webp`
+
+### Upload Process
+1. Read manifest to get list of entries
+2. Build list of files (4 per entry: original + 3 srcset variants)
+3. Check if each file already exists in R2 (skip if present)
+4. Upload with `npx wrangler r2 object put`
+5. Track upload statistics (uploaded/skipped/failed)
+
+### CLI Commands
+```bash
+# Upload all images
+pnpm tsx libs/scraper/src/cli.ts upload --all
+
+# Upload specific category
+pnpm tsx libs/scraper/src/cli.ts upload --category bollards
+
+# Dry run (show what would be uploaded)
+pnpm tsx libs/scraper/src/cli.ts upload --all --dry-run
+```
+
+### Concurrency
+- Default: 3 concurrent uploads
+- Configurable via `SCRAPER_CONCURRENCY` env var
+- Uses exponential backoff retry for transient failures
+
 ## Dependencies
 - `sharp` - Image processing (MUST use, fastest and most reliable)
-- `@effect/platform` - File system operations
+- `@effect/platform` - File system operations and command execution
+- `wrangler` - Cloudflare R2 CLI (must be authenticated)

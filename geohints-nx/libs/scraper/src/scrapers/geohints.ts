@@ -137,7 +137,7 @@ const parseGeohintImages = (
         // e.g., /storage/licensePlates/South_Africa_Eastern_Cape.jpg
         const filename = src.split("/").pop() ?? ""
         const countryMatch = filename.match(/^([A-Za-z_]+)(?:_\d+)?\./)
-        const country = countryMatch
+        const country = countryMatch?.[1]
           ? countryMatch[1].replace(/_/g, " ")
           : "Unknown"
 

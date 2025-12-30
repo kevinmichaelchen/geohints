@@ -95,7 +95,8 @@ const parseCountryData = (
 ): Effect.Effect<readonly GeomastrCountry[], ParseError> =>
   Effect.gen(function* () {
     const $ = cheerio.load(html)
-    const countryMap = new Map<string, GeomastrCountry>()
+    // Use mutable arrays during parsing, convert to GeomastrCountry at the end
+    const countryMap = new Map<string, { name: string; code: string; images: string[] }>()
 
     // Category path in URLs - use mapping since geomastr uses different naming
     const categoryPath = CATEGORY_TO_PATH[category] ?? category
@@ -124,8 +125,8 @@ const parseCountryData = (
       }
     })
 
-    // Convert map to array
-    const countries = Array.from(countryMap.values())
+    // Convert map to array (types are compatible with GeomastrCountry)
+    const countries: GeomastrCountry[] = Array.from(countryMap.values())
 
     // Fallback: try to find all images if no category-specific images found
     if (countries.length === 0) {

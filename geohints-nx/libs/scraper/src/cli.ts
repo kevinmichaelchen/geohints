@@ -21,9 +21,11 @@ import { StorageService } from "./services/storage-service"
 import { scrapeGeomastr, scrapeAllGeomastr } from "./scrapers/geomastr"
 import { scrapeGeohints, scrapeAllGeohints } from "./scrapers/geohints"
 import { ImageService } from "./services/image-service"
+import { R2Service } from "./services/r2-service"
 import { CATEGORIES, type Category, type Source } from "../../shared/src/schemas/category"
 import * as fs from "node:fs/promises"
 import * as path from "node:path"
+import { NodeCommandExecutor } from "@effect/platform-node"
 
 // ---------------------------------------------------------------------------
 // Layer Composition
@@ -60,13 +62,24 @@ const StorageServiceLayer = StorageService.layer.pipe(
 // ImageService is standalone (uses Sharp)
 const ImageServiceLayer = ImageService.layer
 
+// CommandExecutor for process spawning
+const CommandExecutorLayer = NodeCommandExecutor.layer
+
+// R2Service needs: ScraperConfig, CommandExecutor
+const R2ServiceLayer = R2Service.layer.pipe(
+  Layer.provide(ConfigLayer),
+  Layer.provide(CommandExecutorLayer)
+)
+
 // Combine all layers
 const MainLayer = Layer.mergeAll(
   PlatformLayer,
   ConfigLayer,
   HttpServiceLayer,
   StorageServiceLayer,
-  ImageServiceLayer
+  ImageServiceLayer,
+  R2ServiceLayer,
+  CommandExecutorLayer
 )
 
 // ---------------------------------------------------------------------------
@@ -272,13 +285,93 @@ const processCommand = Command.make(
     }).pipe(Effect.provide(MainLayer))
 )
 
+/**
+ * Upload command - uploads processed images to R2.
+ */
+const uploadCommand = Command.make(
+  "upload",
+  {
+    category: Options.optional(
+      Options.choice("category", CATEGORIES as unknown as readonly string[])
+    ),
+    all: Options.boolean("all").pipe(Options.withDefault(false)),
+    dryRun: Options.boolean("dry-run").pipe(Options.withDefault(false)),
+  },
+  ({ category, all, dryRun }) =>
+    Effect.gen(function* () {
+      const storage = yield* StorageService
+      const r2 = yield* R2Service
+      const config = yield* ScraperConfig
+
+      yield* Effect.log(`Starting upload to R2...`)
+      if (dryRun) {
+        yield* Effect.log(`(Dry run - no files will be uploaded)`)
+      }
+
+      // Read manifest to get list of entries
+      const manifest = yield* storage.readManifest()
+
+      // Filter entries if category specified
+      const entries = category._tag === "Some"
+        ? manifest.entries.filter(e => e.category === category.value)
+        : all
+        ? manifest.entries
+        : []
+
+      if (entries.length === 0 && !all && category._tag === "None") {
+        yield* Effect.logError("Please specify --category <name> or --all")
+        return
+      }
+
+      yield* Effect.log(`Found ${entries.length} entries to upload`)
+
+      // Build list of files to upload from entries
+      const files: { localPath: string; r2Key: string }[] = []
+
+      for (const entry of entries) {
+        const basePath = `${config.outputDir}/${entry.category}/${entry.countryCode.toLowerCase()}`
+        const hash = entry.contentHash.slice(0, 8)
+
+        // Add all variant files
+        for (const width of ["400w", "800w", "1200w", "original"]) {
+          const filename = `${hash}-${width}.webp`
+          const localPath = `${basePath}/${filename}`
+          const r2Key = `${entry.category}/${entry.countryCode.toLowerCase()}/${filename}`
+          files.push({ localPath, r2Key })
+        }
+      }
+
+      yield* Effect.log(`Total files to process: ${files.length}`)
+
+      if (dryRun) {
+        // Just show what would be uploaded
+        for (const file of files.slice(0, 10)) {
+          yield* Effect.log(`Would upload: ${file.localPath} -> ${file.r2Key}`)
+        }
+        if (files.length > 10) {
+          yield* Effect.log(`... and ${files.length - 10} more files`)
+        }
+        return
+      }
+
+      // Perform uploads
+      const stats = yield* r2.uploadMany(files)
+
+      yield* Effect.log(`\n=== Upload Complete ===`)
+      yield* Effect.log(`Uploaded: ${stats.uploaded}`)
+      yield* Effect.log(`Skipped (already exists): ${stats.skipped}`)
+      yield* Effect.log(`Failed: ${stats.failed}`)
+      yield* Effect.log(`Total: ${stats.total}`)
+    }).pipe(Effect.provide(MainLayer))
+)
+
 // ---------------------------------------------------------------------------
 // Main CLI
 // ---------------------------------------------------------------------------
 
 const mainCommand = Command.make("geohints-scraper").pipe(
   Command.withDescription("GeoHints image scraper using Effect-TS"),
-  Command.withSubcommands([scrapeCommand, statsCommand, processCommand])
+  Command.withSubcommands([scrapeCommand, statsCommand, processCommand, uploadCommand])
 )
 
 const cli = Command.run(mainCommand, {

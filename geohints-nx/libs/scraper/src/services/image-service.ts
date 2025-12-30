@@ -8,7 +8,6 @@
 
 import { Context, Effect, Layer } from "effect"
 import sharp from "sharp"
-import { ScraperConfig } from "../config/scraper-config"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -51,7 +50,6 @@ export class ImageError {
 // Constants
 // ---------------------------------------------------------------------------
 
-const SRCSET_WIDTHS = [400, 800, 1200] as const
 const ORIGINAL_QUALITY = 95
 const SRCSET_QUALITY = 82
 
