@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "extends": ["../../.oxlintrc.json"],
+  "plugins": ["typescript", "promise", "unicorn"],
+  "rules": {
+    "no-console": "off",
+
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/await-thenable": "error",
+    "typescript/no-unnecessary-type-assertion": "warn",
+
+    "promise/catch-or-return": "error",
+    "promise/no-return-wrap": "error",
+
+    "unicorn/no-await-expression-member": "warn",
+    "unicorn/prefer-promise-reject-errors": "warn",
+
+    "no-throw-literal": "error",
+    "prefer-const": "error",
+    "no-var": "error"
+  }
+}
