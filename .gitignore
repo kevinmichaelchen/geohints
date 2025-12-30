@@ -3,6 +3,12 @@
 /lib
 /lib-types
 /server
+tmp
+out-tsc
+
+# Nx
+.nx/cache
+.nx/workspace-data
 
 # Development
 node_modules
@@ -27,6 +33,7 @@ lerna-debug.log*
 .vscode/*
 !.vscode/launch.json
 !.vscode/*.code-snippets
+!.vscode/extensions.json
 
 .idea
 .DS_Store

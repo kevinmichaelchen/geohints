@@ -1,0 +1,4 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicolo-ribaudo/oxc/oxc_formatter_options_schema/npm/oxfmt/configuration_schema.json",
+  "ignorePatterns": ["dist", "node_modules", ".nx", ".vercel", "pnpm-lock.yaml"]
+}
