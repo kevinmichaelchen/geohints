@@ -10,7 +10,7 @@
  * @module geohints
  */
 
-import { Effect, Stream, Chunk } from "effect";
+import { DateTime, Effect, Stream, Chunk } from "effect";
 import * as cheerio from "cheerio";
 import { HttpService } from "../services/http-service";
 import { StorageService } from "../services/storage-service";
@@ -314,6 +314,7 @@ const processGeohintImage = Effect.fn("Geohints.processImage")(function* (
   // Create manifest entry
   const countryCode = image.countryCode.toUpperCase().slice(0, 2) as CountryCode;
   const sourceUrl = image.imageUrl as Url;
+  const scrapedAt = DateTime.toDate(yield* DateTime.now);
 
   return new ManifestEntry({
     id,
@@ -328,7 +329,7 @@ const processGeohintImage = Effect.fn("Geohints.processImage")(function* (
       "800w": `${basePath}/${filename}-800w.webp`,
       "1200w": `${basePath}/${filename}-1200w.webp`,
     },
-    scrapedAt: new Date(),
+    scrapedAt,
   });
 });
 
@@ -375,7 +376,7 @@ export const scrapeGeohints = Effect.fn("Geohints.scrape")(function* (category: 
       Effect.succeed(
         new Manifest({
           version: 1,
-          lastUpdated: new Date(),
+          lastUpdated: DateTime.toDate(DateTime.unsafeNow()),
           entries: [],
         }),
       ),
@@ -506,7 +507,7 @@ export const scrapeAllGeohints = Effect.fn("Geohints.scrapeAll")(function* () {
       Effect.succeed(
         new Manifest({
           version: 1,
-          lastUpdated: new Date(),
+          lastUpdated: DateTime.toDate(DateTime.unsafeNow()),
           entries: [],
         }),
       ),

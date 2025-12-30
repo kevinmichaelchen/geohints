@@ -7,7 +7,7 @@
  * @module geomastr
  */
 
-import { Effect, Stream, Schema, Chunk } from "effect";
+import { DateTime, Effect, Stream, Schema, Chunk } from "effect";
 import * as cheerio from "cheerio";
 import { HttpService } from "../services/http-service";
 import { StorageService } from "../services/storage-service";
@@ -225,6 +225,7 @@ const processImage = Effect.fn("Geomastr.processImage")(function* (
   // Create manifest entry
   const countryCode = country.code.toUpperCase().slice(0, 2) as CountryCode;
   const sourceUrl = imageUrl as Url;
+  const scrapedAt = DateTime.toDate(yield* DateTime.now);
 
   return new ManifestEntry({
     id,
@@ -239,7 +240,7 @@ const processImage = Effect.fn("Geomastr.processImage")(function* (
       "800w": `${basePath}/${filename}-800w.webp`,
       "1200w": `${basePath}/${filename}-1200w.webp`,
     },
-    scrapedAt: new Date(),
+    scrapedAt,
   });
 });
 
@@ -276,7 +277,7 @@ export const scrapeGeomastr = Effect.fn("Geomastr.scrape")(function* (category: 
       Effect.succeed(
         new Manifest({
           version: 1,
-          lastUpdated: new Date(),
+          lastUpdated: DateTime.toDate(DateTime.unsafeNow()),
           entries: [],
         }),
       ),
@@ -430,7 +431,7 @@ export const scrapeAllGeomastr = Effect.fn("Geomastr.scrapeAll")(function* () {
       Effect.succeed(
         new Manifest({
           version: 1,
-          lastUpdated: new Date(),
+          lastUpdated: DateTime.toDate(DateTime.unsafeNow()),
           entries: [],
         }),
       ),

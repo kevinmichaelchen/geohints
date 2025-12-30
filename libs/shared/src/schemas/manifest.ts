@@ -7,7 +7,7 @@
  * @module manifest
  */
 
-import { Schema } from "effect";
+import { DateTime, Schema } from "effect";
 import { Category, Source } from "./category";
 
 // ---------------------------------------------------------------------------
@@ -205,7 +205,7 @@ export class Manifest extends Schema.Class<Manifest>("Manifest")({
     const uniqueNew = newEntries.filter((e) => !existingHashes.has(e.contentHash));
     return new Manifest({
       version: this.version,
-      lastUpdated: new Date(),
+      lastUpdated: DateTime.toDate(DateTime.unsafeNow()),
       entries: [...this.entries, ...uniqueNew],
     });
   }
@@ -221,6 +221,6 @@ export class Manifest extends Schema.Class<Manifest>("Manifest")({
 export const emptyManifest = (): Manifest =>
   new Manifest({
     version: 1,
-    lastUpdated: new Date(),
+    lastUpdated: DateTime.toDate(DateTime.unsafeNow()),
     entries: [],
   });
