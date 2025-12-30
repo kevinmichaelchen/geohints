@@ -34,11 +34,19 @@ export default component$(() => {
     return (
       <div class="min-h-screen flex items-center justify-center">
         <div class="text-center">
-          <h1 class="text-4xl font-bold mb-4">Country Not Found</h1>
-          <p class="text-gray-400 mb-8">
+          <h1
+            class="text-4xl font-bold mb-4 text-ink"
+            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+          >
+            Country Not Found
+          </h1>
+          <p
+            class="text-ink-faded mb-8 italic"
+            style={{ fontFamily: "'Crimson Text', Georgia, serif" }}
+          >
             The country you're looking for doesn't exist in our database.
           </p>
-          <a href="/bollards" class="text-qwik-blue-400 hover:underline">
+          <a href="/bollards" class="text-teal hover:text-burnt-sienna underline">
             Browse all countries
           </a>
         </div>
@@ -67,11 +75,17 @@ export default component$(() => {
           <div class="flex-1 min-w-0">
             {/* Bollards Section */}
             <section id="bollards" class="scroll-mt-24">
-              <h2 class="text-2xl font-bold text-qwik-blue-400 mb-6 border-b border-qwik-dirty-black/40 pb-2">
+              <h2
+                class="text-2xl font-bold text-burnt-sienna mb-6 border-b border-burnt-sienna/20 pb-2"
+                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              >
                 Bollards
               </h2>
 
-              <p class="text-gray-400 mb-6">
+              <p
+                class="text-ink-faded mb-6 italic"
+                style={{ fontFamily: "'Crimson Text', Georgia, serif" }}
+              >
                 {country.images.length} bollard image
                 {country.images.length !== 1 ? "s" : ""} from {country.name}.
               </p>
@@ -81,12 +95,12 @@ export default component$(() => {
                 {country.images.map((seq, i) => (
                   <div
                     key={seq}
-                    class="group relative rounded-lg overflow-hidden bg-qwik-dirty-black/60"
+                    class="group relative rounded-sm overflow-hidden bg-parchment-light border border-burnt-sienna/15 shadow-sm hover:shadow-md transition-shadow"
                   >
-                    {/* Gradient border on hover */}
+                    {/* Vintage border on hover */}
                     <div
-                      class="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
-                      style="background: linear-gradient(135deg, rgba(24,182,246,0.4), rgba(172,127,244,0.4)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; padding: 1px;"
+                      class="absolute inset-0 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
+                      style="background: linear-gradient(135deg, rgba(184,134,11,0.4), rgba(139,69,19,0.4)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; padding: 1px;"
                       aria-hidden="true"
                     />
 
@@ -99,12 +113,13 @@ export default component$(() => {
                         height={250}
                         alt={`Bollard from ${country.name} - Example ${i + 1}`}
                         class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        style={{ filter: "sepia(0.1)" }}
                         loading={i < 6 ? "eager" : "lazy"}
                         decoding="async"
                       />
 
                       {/* Image number badge */}
-                      <div class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded text-xs text-gray-300 font-medium">
+                      <div class="absolute bottom-2 right-2 bg-parchment/80 backdrop-blur-sm px-2 py-0.5 rounded-sm text-xs text-ink-faded font-medium border border-burnt-sienna/20">
                         {i + 1}/{country.images.length}
                       </div>
                     </div>

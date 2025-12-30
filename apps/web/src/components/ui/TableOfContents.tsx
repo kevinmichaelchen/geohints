@@ -60,8 +60,11 @@ export const TableOfContents = component$<TableOfContentsProps>(({ items }) => {
       class="hidden lg:block sticky top-24 w-56 shrink-0 self-start"
       aria-label="Table of contents"
     >
-      <div class="border-l-2 border-qwik-dirty-black/40 pl-4">
-        <h4 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wide">
+      <div class="border-l-2 border-burnt-sienna/30 pl-4">
+        <h4
+          class="text-sm font-semibold text-burnt-sienna mb-3 uppercase tracking-wide"
+          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+        >
           On this page
         </h4>
         <ul class="space-y-2">
@@ -72,9 +75,10 @@ export const TableOfContents = component$<TableOfContentsProps>(({ items }) => {
                 class={[
                   "block text-sm transition-colors duration-200",
                   activeId.value === item.id
-                    ? "text-qwik-blue-400 font-medium"
-                    : "text-gray-400 hover:text-white",
+                    ? "text-burnt-sienna font-medium"
+                    : "text-ink-faded hover:text-ink",
                 ]}
+                style={{ fontFamily: "'Crimson Text', Georgia, serif" }}
                 onClick$={(e) => {
                   e.preventDefault();
                   const element = document.getElementById(item.id);
