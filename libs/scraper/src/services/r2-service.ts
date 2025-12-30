@@ -112,6 +112,7 @@ export class R2Service extends Context.Tag("@geohints/R2Service")<R2Service, R2S
               `${config.r2BucketName}/${_r2Key}`,
               `--file=${_localPath}`,
               "--content-type=image/webp",
+              "--remote",
             );
 
             // Execute command and get exit code
