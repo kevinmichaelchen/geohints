@@ -3,6 +3,9 @@
 /lib
 /lib-types
 /server
+/apps/*/dist
+/apps/*/server
+/packages/*/dist
 tmp
 out-tsc
 
